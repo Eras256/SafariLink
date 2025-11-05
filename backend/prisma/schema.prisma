@@ -1,0 +1,370 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                String    @id @default(cuid())
+  walletAddress     String    @unique
+  ens               String?
+  email             String?   @unique
+  emailVerified     Boolean   @default(false)
+  
+  // Profile
+  username          String?   @unique
+  bio               String?
+  avatar            String?
+  location          String?
+  timezone          String?
+  
+  // Reputation
+  builderScore      Int       @default(0)
+  humanPassportScore Float?
+  worldIdVerified   Boolean   @default(false)
+  
+  // Compliance
+  kycStatus         KycStatus @default(NOT_STARTED)
+  kycProvider       String?
+  kycData           Json?
+  taxCountry        String?
+  ofacScreened      Boolean   @default(false)
+  ofacScreenedAt    DateTime?
+  
+  // Timestamps
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+  lastLoginAt       DateTime?
+  
+  // Relations
+  teams             TeamMember[]
+  projects          Project[]
+  hackathonRegs     HackathonRegistration[]
+  grants            GrantApplication[]
+  votes             Vote[]
+  comments          Comment[]
+  
+  @@index([walletAddress])
+  @@index([email])
+  @@index([builderScore])
+}
+
+enum KycStatus {
+  NOT_STARTED
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+model Hackathon {
+  id                String    @id @default(cuid())
+  slug              String    @unique
+  
+  // Basic info
+  name              String
+  tagline           String?
+  description       String
+  bannerImage       String?
+  logoImage         String?
+  
+  // Organizer
+  organizerId       String
+  organizerName     String
+  organizerEmail    String
+  organizerWallet   String
+  
+  // Dates
+  registrationStart DateTime
+  registrationEnd   DateTime
+  eventStart        DateTime
+  eventEnd          DateTime
+  submissionDeadline DateTime
+  judgingStart      DateTime
+  judgingEnd        DateTime
+  winnersAnnounced  DateTime?
+  
+  // Location
+  locationType      LocationType
+  location          String?
+  isOnline          Boolean   @default(false)
+  
+  // Blockchain
+  chains            String[]  // ["arbitrum", "base", "optimism"]
+  
+  // Prizes
+  totalPrizePool    Decimal   @db.Decimal(18, 2)
+  currency          String    @default("USDC")
+  prizeDistribution Json
+  
+  // Settings
+  maxParticipants   Int?
+  requiresApproval  Boolean   @default(false)
+  minTeamSize       Int       @default(1)
+  maxTeamSize       Int       @default(5)
+  
+  // Tracks/Categories
+  tracks            Track[]
+  
+  // Status
+  status            HackathonStatus @default(DRAFT)
+  
+  // Metadata
+  tags              String[]
+  sponsors          Json[]
+  judges            Json[]
+  schedule          Json?
+  resources         Json?
+  
+  // Timestamps
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+  
+  // Relations
+  registrations     HackathonRegistration[]
+  projects          Project[]
+  
+  @@index([status])
+  @@index([eventStart])
+}
+
+enum LocationType {
+  IN_PERSON
+  HYBRID
+  ONLINE
+}
+
+enum HackathonStatus {
+  DRAFT
+  PUBLISHED
+  REGISTRATION_OPEN
+  REGISTRATION_CLOSED
+  ONGOING
+  JUDGING
+  COMPLETED
+  CANCELLED
+}
+
+model Track {
+  id            String     @id @default(cuid())
+  hackathonId   String
+  name          String
+  description   String?
+  prizeAmount   Decimal    @db.Decimal(18, 2)
+  
+  hackathon     Hackathon  @relation(fields: [hackathonId], references: [id], onDelete: Cascade)
+  projects      Project[]
+  
+  @@index([hackathonId])
+}
+
+model HackathonRegistration {
+  id              String     @id @default(cuid())
+  userId          String
+  hackathonId     String
+  
+  status          RegistrationStatus @default(PENDING)
+  approvedAt      DateTime?
+  
+  // Team
+  teamId          String?
+  teamRole        String?    // "leader", "member"
+  
+  // Metadata
+  applicationData Json?
+  
+  createdAt       DateTime   @default(now())
+  updatedAt       DateTime   @updatedAt
+  
+  user            User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  hackathon       Hackathon  @relation(fields: [hackathonId], references: [id], onDelete: Cascade)
+  team            Team?      @relation(fields: [teamId], references: [id])
+  
+  @@unique([userId, hackathonId])
+  @@index([hackathonId])
+  @@index([teamId])
+}
+
+enum RegistrationStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  WAITLISTED
+}
+
+model Team {
+  id              String     @id @default(cuid())
+  name            String
+  hackathonId     String
+  
+  createdAt       DateTime   @default(now())
+  updatedAt       DateTime   @updatedAt
+  
+  members         TeamMember[]
+  projects        Project[]
+  registrations   HackathonRegistration[]
+  
+  @@index([hackathonId])
+}
+
+model TeamMember {
+  id        String   @id @default(cuid())
+  teamId    String
+  userId    String
+  role      String   @default("member") // "leader", "member"
+  
+  createdAt DateTime @default(now())
+  
+  team      Team     @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@unique([teamId, userId])
+  @@index([userId])
+}
+
+model Project {
+  id              String     @id @default(cuid())
+  slug            String     @unique
+  
+  // Basic info
+  name            String
+  tagline         String?
+  description     String
+  coverImage      String?
+  
+  // Hackathon
+  hackathonId     String
+  trackId         String?
+  
+  // Team
+  teamId          String?
+  creatorId       String
+  
+  // Submission
+  demoUrl         String?
+  videoUrl        String?
+  githubUrl       String?
+  figmaUrl        String?
+  
+  // Blockchain
+  contracts       Json?      // { arbitrum: "0x...", base: "0x..." }
+  techStack       String[]
+  
+  // Judging
+  judgeScores     Json?
+  finalScore      Float?
+  rank            Int?
+  prizeWon        Decimal?   @db.Decimal(18, 2)
+  
+  // AI checks
+  plagiarismScore Float?
+  plagiarismReport Json?
+  
+  // Status
+  status          ProjectStatus @default(DRAFT)
+  submittedAt     DateTime?
+  
+  // Post-hackathon
+  continued       Boolean   @default(false)
+  fundingRaised   Decimal?  @db.Decimal(18, 2)
+  
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  
+  hackathon       Hackathon @relation(fields: [hackathonId], references: [id], onDelete: Cascade)
+  track           Track?    @relation(fields: [trackId], references: [id])
+  team            Team?     @relation(fields: [teamId], references: [id])
+  creator         User      @relation(fields: [creatorId], references: [id])
+  votes           Vote[]
+  comments        Comment[]
+  grants          GrantApplication[]
+  
+  @@index([hackathonId])
+  @@index([trackId])
+  @@index([teamId])
+  @@index([status])
+}
+
+enum ProjectStatus {
+  DRAFT
+  SUBMITTED
+  UNDER_REVIEW
+  APPROVED
+  REJECTED
+  WINNER
+}
+
+model Vote {
+  id          String   @id @default(cuid())
+  userId      String
+  projectId   String
+  
+  weight      Int      @default(1) // Quadratic voting
+  
+  createdAt   DateTime @default(now())
+  
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  project     Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  
+  @@unique([userId, projectId])
+  @@index([projectId])
+}
+
+model Comment {
+  id          String   @id @default(cuid())
+  userId      String
+  projectId   String
+  
+  content     String
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  project     Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  
+  @@index([projectId])
+}
+
+model GrantApplication {
+  id              String     @id @default(cuid())
+  userId          String
+  projectId       String
+  
+  // Grant details
+  grantProgram    String     // "Arbitrum Foundation", "Optimism RetroPGF", etc.
+  amountRequested Decimal    @db.Decimal(18, 2)
+  
+  // Application
+  proposal        String
+  milestones      Json
+  budget          Json
+  
+  // Status
+  status          GrantStatus @default(DRAFT)
+  submittedAt     DateTime?
+  decidedAt       DateTime?
+  
+  // Result
+  amountApproved  Decimal?   @db.Decimal(18, 2)
+  
+  createdAt       DateTime   @default(now())
+  updatedAt       DateTime   @updatedAt
+  
+  user            User       @relation(fields: [userId], references: [id])
+  project         Project    @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  
+  @@index([projectId])
+  @@index([status])
+}
+
+enum GrantStatus {
+  DRAFT
+  SUBMITTED
+  UNDER_REVIEW
+  APPROVED
+  REJECTED
+}
+

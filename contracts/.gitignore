@@ -1,0 +1,9 @@
+cache/
+out/
+broadcast/
+lib/
+.env
+.env.local
+*.log
+.DS_Store
+

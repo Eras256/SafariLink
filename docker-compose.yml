@@ -1,0 +1,102 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: safarilink
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-safarilink123}
+      POSTGRES_DB: safarilink
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U safarilink"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    environment:
+      DATABASE_URL: postgresql://safarilink:${DB_PASSWORD:-safarilink123}@postgres:5432/safarilink
+      REDIS_URL: redis://redis:6379
+      JWT_SECRET: ${JWT_SECRET}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}
+      SMILE_ID_API_KEY: ${SMILE_ID_API_KEY}
+      SMILE_ID_PARTNER_ID: ${SMILE_ID_PARTNER_ID}
+      CHAINALYSIS_API_KEY: ${CHAINALYSIS_API_KEY}
+      GITHUB_TOKEN: ${GITHUB_TOKEN}
+      NODE_ENV: production
+    ports:
+      - "4000:4000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    environment:
+      NEXT_PUBLIC_API_URL: http://backend:4000
+      NEXT_PUBLIC_REOWN_PROJECT_ID: ${REOWN_PROJECT_ID}
+      NODE_ENV: production
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+    restart: unless-stopped
+
+  team-matcher:
+    build:
+      context: ./ai-services/team_matcher
+      dockerfile: Dockerfile
+    environment:
+      GITHUB_TOKEN: ${GITHUB_TOKEN}
+    ports:
+      - "8001:8000"
+    restart: unless-stopped
+
+  plagiarism-detector:
+    build:
+      context: ./ai-services/plagiarism_detector
+      dockerfile: Dockerfile
+    environment:
+      GITHUB_TOKEN: ${GITHUB_TOKEN}
+    ports:
+      - "8002:8000"
+    restart: unless-stopped
+
+  mentor-bot:
+    build:
+      context: ./ai-services/mentor_bot
+      dockerfile: Dockerfile
+    environment:
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}
+    ports:
+      - "8003:8000"
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+  redis_data:
+

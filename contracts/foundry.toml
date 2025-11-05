@@ -1,0 +1,28 @@
+[profile.default]
+src = "src"
+out = "out"
+libs = ["lib"]
+test = "test"
+script = "script"
+cache_path = "cache"
+optimizer = true
+optimizer_runs = 10000
+via_ir = true
+solc = "0.8.20"
+evm_version = "paris"
+remappings = [
+    "@openzeppelin/=lib/openzeppelin-contracts/",
+    "@forge-std/=lib/forge-std/src/",
+]
+
+[profile.ci]
+fuzz_runs = 1000
+invariant_test_runs = 100
+
+[fmt]
+line_length = 120
+tab_width = 4
+bracket_spacing = true
+int_types = "long"
+multiline_func_header = "all"
+
