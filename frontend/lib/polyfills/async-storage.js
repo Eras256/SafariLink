@@ -2,7 +2,7 @@
 // This module is not needed in browser environment
 // It's only required by @metamask/sdk for React Native compatibility
 
-export default {
+const asyncStoragePolyfill = {
   getItem: async () => null,
   setItem: async () => {},
   removeItem: async () => {},
@@ -12,4 +12,6 @@ export default {
   multiSet: async () => {},
   multiRemove: async () => {},
 };
+
+export default asyncStoragePolyfill;
 

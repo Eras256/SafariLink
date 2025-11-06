@@ -93,9 +93,10 @@ const nextConfig = {
     config.externals.push('pino-pretty', 'lokijs', 'encoding');
     // Ignore React Native modules that are not needed in browser environment
     if (!isServer) {
+      const path = require('path');
       config.resolve.alias = {
         ...config.resolve.alias,
-        '@react-native-async-storage/async-storage': require.resolve(__dirname + '/lib/polyfills/async-storage.js'),
+        '@react-native-async-storage/async-storage': path.resolve(__dirname, 'lib/polyfills/async-storage.js'),
       };
     }
     return config;

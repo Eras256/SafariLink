@@ -64,7 +64,6 @@ export function GrantCard({ grant, index }: GrantCardProps) {
                 contextData={{
                   project: {
                     name: grant.project.name,
-                    techStack: grant.project.techStack,
                   },
                   grantProgram: grant.grantProgram,
                 }}
