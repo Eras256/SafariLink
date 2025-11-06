@@ -29,7 +29,6 @@ const CATEGORY_KEYWORDS: Record<string, string> = {
   
   // Hackathon Themes
   hackathon: 'technology innovation coding',
-  web3: 'blockchain cryptocurrency',
   blockchain: 'cryptocurrency technology',
   
   // Learn Categories
