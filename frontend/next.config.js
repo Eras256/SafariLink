@@ -9,7 +9,7 @@ const withPWA = require('next-pwa')({
     {
       // Exclude all API routes from service worker
       urlPattern: /^https?:\/\/.*\/api\/.*/i,
-      handler: 'NetworkOnly',
+      handler: 'NetworkFirst',
       options: {
         cacheableResponse: {
           statuses: [0, 200],
@@ -20,7 +20,7 @@ const withPWA = require('next-pwa')({
     {
       // Exclude external API calls (backend on port 4000, AI service on port 8000)
       urlPattern: /^http:\/\/localhost:(4000|8000)\/.*/i,
-      handler: 'NetworkOnly',
+      handler: 'NetworkFirst',
       options: {
         cacheableResponse: {
           statuses: [0, 200],
@@ -33,7 +33,6 @@ const withPWA = require('next-pwa')({
 
 const nextConfig = {
   reactStrictMode: true,
-  swcMinify: true,
   images: {
     remotePatterns: [
       {
@@ -72,7 +71,7 @@ const nextConfig = {
     minimumCacheTTL: 60,
   },
   experimental: {
-    serverActions: true,
+    serverActions: {},
   },
   webpack: (config) => {
     config.resolve.fallback = {
