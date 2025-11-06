@@ -33,6 +33,16 @@ const withPWA = require('next-pwa')({
 
 const nextConfig = {
   reactStrictMode: true,
+  eslint: {
+    // Warning: This allows production builds to successfully complete even if
+    // your project has ESLint errors.
+    ignoreDuringBuilds: false,
+  },
+  typescript: {
+    // Warning: This allows production builds to successfully complete even if
+    // your project has type errors.
+    ignoreBuildErrors: false,
+  },
   images: {
     remotePatterns: [
       {
@@ -73,7 +83,7 @@ const nextConfig = {
   experimental: {
     serverActions: {},
   },
-  webpack: (config) => {
+  webpack: (config, { isServer }) => {
     config.resolve.fallback = {
       ...config.resolve.fallback,
       fs: false,
@@ -81,6 +91,13 @@ const nextConfig = {
       tls: false,
     };
     config.externals.push('pino-pretty', 'lokijs', 'encoding');
+    // Ignore React Native modules that are not needed in browser environment
+    if (!isServer) {
+      config.resolve.alias = {
+        ...config.resolve.alias,
+        '@react-native-async-storage/async-storage': require.resolve(__dirname + '/lib/polyfills/async-storage.js'),
+      };
+    }
     return config;
   },
 };

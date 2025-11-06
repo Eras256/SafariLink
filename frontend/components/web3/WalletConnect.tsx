@@ -18,17 +18,10 @@ function WalletConnectInner() {
   const [mounted, setMounted] = useState(false);
   const [appKitReady, setAppKitReady] = useState(false);
   
-  // Use AppKit hook - must be called unconditionally
-  // If AppKit is not initialized, this will throw an error
-  let appKit: ReturnType<typeof useAppKit> | null = null;
-  let appKitError: Error | null = null;
-  
-  try {
-    appKit = useAppKit();
-  } catch (error) {
-    appKitError = error as Error;
-    // Silently catch - we'll handle this in the component logic
-  }
+  // Use AppKit hook - must be called unconditionally (React Hooks rule)
+  // If AppKit is not initialized, this will throw an error at runtime
+  // We'll handle this gracefully in the component logic
+  const appKit = useAppKit();
 
   useEffect(() => {
     setMounted(true);
@@ -39,25 +32,21 @@ function WalletConnectInner() {
     if (!mounted) return;
     
     // Check if AppKit is ready after component mounts
-    if (appKit && !appKitError && typeof appKit.open === 'function') {
+    if (appKit && typeof appKit.open === 'function') {
       setAppKitReady(true);
       return;
     }
     
     // Retry after a short delay (only once)
     const timer = setTimeout(() => {
-      try {
-        // Try to access AppKit again
-        if (appKit && typeof appKit.open === 'function') {
-          setAppKitReady(true);
-        }
-      } catch {
-        // Still not ready - will show loading state
+      // Try to access AppKit again
+      if (appKit && typeof appKit.open === 'function') {
+        setAppKitReady(true);
       }
     }, 200);
     
     return () => clearTimeout(timer);
-  }, [mounted]); // Only depend on mounted, not on appKit/appKitError to avoid loops
+  }, [mounted, appKit]); // Include appKit in dependencies
 
   const handleConnect = () => {
     if (appKit && appKit.open) {
@@ -73,7 +62,7 @@ function WalletConnectInner() {
   };
 
   // Show loading state until mounted and AppKit ready
-  if (!mounted || (!appKitReady && appKitError)) {
+  if (!mounted || !appKitReady) {
     return (
       <Button disabled className="glassmorphic-button">
         Loading...

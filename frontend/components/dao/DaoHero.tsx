@@ -38,7 +38,7 @@ export function DaoHero() {
           transition={{ duration: 0.6, delay: 0.2 }}
           className="text-lg md:text-xl text-white/70 max-w-3xl mx-auto"
         >
-          Join the decentralized autonomous organization driving SafariLink's evolution. Propose
+          Join the decentralized autonomous organization driving SafariLink&apos;s evolution. Propose
           changes, vote on decisions, and help build the future of Web3 hackathons in Africa and
           emerging markets.
         </motion.p>
