@@ -32,8 +32,8 @@ if (typeof window !== 'undefined') {
       createAppKit({
         adapters: [wagmiAdapter],
         projectId,
-        networks: networks,
-        defaultNetwork: networks[0],
+        networks: networks as any, // Type assertion needed for AppKitNetwork compatibility
+        defaultNetwork: networks[0] as any,
         metadata: metadata,
         features: {
           analytics: true, // Optional - defaults to your Cloud configuration
@@ -78,8 +78,8 @@ export function initializeAppKit() {
     createAppKit({
       adapters: [wagmiAdapter],
       projectId,
-      networks: networks,
-      defaultNetwork: networks[0],
+      networks: networks as any, // Type assertion needed for AppKitNetwork compatibility
+      defaultNetwork: networks[0] as any,
       metadata: metadata,
       features: {
         analytics: true,
