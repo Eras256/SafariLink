@@ -25,7 +25,7 @@ export function usePrizeDistributor(chainId: number) {
       address,
       abi: PRIZE_DISTRIBUTOR_ABI,
       functionName: 'setPrizes',
-      args: [0, winners, amounts], // TODO: Pass hackathonId
+      args: [0n, winners, amounts], // TODO: Pass hackathonId
     });
   };
 
@@ -34,7 +34,7 @@ export function usePrizeDistributor(chainId: number) {
       address,
       abi: PRIZE_DISTRIBUTOR_ABI,
       functionName: 'claimPrize',
-      args: [hackathonId],
+      args: [BigInt(hackathonId)],
     });
   };
 

@@ -98,6 +98,11 @@ const nextConfig = {
         ...config.resolve.alias,
         '@react-native-async-storage/async-storage': path.resolve(__dirname, 'lib/polyfills/async-storage.js'),
       };
+      // Also add to modules that webpack should resolve
+      config.resolve.modules = [
+        ...(config.resolve.modules || []),
+        path.resolve(__dirname, 'lib/polyfills'),
+      ];
     }
     return config;
   },
