@@ -39,6 +39,9 @@ model User {
   updatedAt         DateTime  @updatedAt
   lastLoginAt       DateTime?
   
+  // Gamification
+  gamificationScore Int       @default(0)
+  
   // Relations
   teams             TeamMember[]
   projects          Project[]
@@ -48,10 +51,17 @@ model User {
   comments          Comment[]
   roomParticipants  RoomParticipant[]
   roomMessages      RoomMessage[]
+  userBadges        UserBadge[]
+  userChallenges    UserChallenge[]
+  leaderboardEntries LeaderboardEntry[]
+  teamMatchingProfile TeamMatchingProfile?
+  sentMatches       TeamMatch[] @relation("MatchSender")
+  receivedMatches   TeamMatch[] @relation("MatchReceiver")
   
   @@index([walletAddress])
   @@index([email])
   @@index([builderScore])
+  @@index([gamificationScore])
 }
 
 enum KycStatus {
@@ -128,6 +138,13 @@ model Hackathon {
   registrations     HackathonRegistration[]
   projects          Project[]
   networkingRooms   NetworkingRoom[]
+  badges            Badge[]
+  challenges        Challenge[]
+  leaderboardEntries LeaderboardEntry[]
+  userBadges        UserBadge[]
+  userChallenges    UserChallenge[]
+  teamMatchingProfiles TeamMatchingProfile[]
+  teamMatches       TeamMatch[]
   
   @@index([status])
   @@index([eventStart])
@@ -159,7 +176,7 @@ model Track {
   
   hackathon     Hackathon  @relation(fields: [hackathonId], references: [id], onDelete: Cascade)
   projects      Project[]
-  networkingRooms NetworkingRoom[]
+  networkingRooms NetworkingRoom[] @relation("NetworkingRoomTrack")
   
   @@index([hackathonId])
 }
@@ -323,6 +340,12 @@ model Comment {
   
   content     String
   
+  // Feedback fields
+  rating      Int?     // 1-5 star rating (for mentors/judges)
+  feedbackType FeedbackType @default(COMMENT)
+  userRole    UserRole @default(PARTICIPANT) // Role of the user giving feedback
+  isPublic    Boolean  @default(true) // Public comments visible to all
+  
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
   
@@ -330,6 +353,25 @@ model Comment {
   project     Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
   
   @@index([projectId])
+  @@index([userId])
+  @@index([feedbackType])
+  @@index([userRole])
+  @@index([createdAt])
+}
+
+enum FeedbackType {
+  COMMENT
+  SUGGESTION
+  PRAISE
+  WARNING
+  QUESTION
+}
+
+enum UserRole {
+  PARTICIPANT
+  MENTOR
+  JUDGE
+  ORGANIZER
 }
 
 model GrantApplication {
@@ -404,7 +446,7 @@ model NetworkingRoom {
   
   // Relations
   hackathon       Hackathon @relation(fields: [hackathonId], references: [id], onDelete: Cascade)
-  track           Track?    @relation(fields: [trackId], references: [id], onDelete: SetNull)
+  trackRelation   Track?    @relation("NetworkingRoomTrack", fields: [trackId], references: [id], onDelete: SetNull)
   participants    RoomParticipant[]
   messages        RoomMessage[]
   breakoutSessions BreakoutSession[] @relation("BreakoutSessionRoom")
@@ -412,7 +454,6 @@ model NetworkingRoom {
   
   @@index([hackathonId])
   @@index([trackId])
-  @@index([track])
   @@index([isActive])
 }
 
@@ -517,5 +558,303 @@ model BreakoutSession {
   @@index([roomId])
   @@index([parentRoomId])
   @@index([isActive])
+}
+
+// Gamification Models
+
+model Badge {
+  id          String   @id @default(cuid())
+  hackathonId String?
+  
+  // Badge info
+  name        String
+  description String
+  icon        String?  // Emoji or icon URL
+  rarity      BadgeRarity @default(COMMON)
+  
+  // Requirements
+  badgeType   BadgeType
+  requirement Json?    // Specific requirements (e.g., { "projects": 1, "feedback": 10 })
+  points      Int      @default(0) // Points awarded when earned
+  
+  // NFT Reward
+  nftReward   Boolean  @default(false)
+  nftMetadata Json?    // NFT metadata if nftReward is true
+  
+  // Status
+  isActive    Boolean  @default(true)
+  
+  // Timestamps
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  // Relations
+  hackathon   Hackathon? @relation(fields: [hackathonId], references: [id], onDelete: Cascade)
+  userBadges  UserBadge[]
+  
+  @@index([hackathonId])
+  @@index([badgeType])
+  @@index([rarity])
+  @@index([isActive])
+}
+
+enum BadgeRarity {
+  COMMON
+  RARE
+  EPIC
+  LEGENDARY
+}
+
+enum BadgeType {
+  PROJECT_SUBMISSION
+  FEEDBACK_GIVEN
+  FEEDBACK_RECEIVED
+  NETWORKING
+  TEAM_COLLABORATION
+  DAILY_CHALLENGE
+  WINNER
+  PARTICIPATION
+  MENTOR_ACTIVITY
+  JUDGE_ACTIVITY
+  CUSTOM
+}
+
+model UserBadge {
+  id          String   @id @default(cuid())
+  userId      String
+  badgeId     String
+  hackathonId String?
+  
+  // Metadata
+  earnedAt    DateTime @default(now())
+  nftTokenId  String?  // NFT token ID if minted
+  nftTxHash   String?  // Transaction hash for NFT mint
+  
+  // Relations
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  badge       Badge    @relation(fields: [badgeId], references: [id], onDelete: Cascade)
+  hackathon   Hackathon? @relation(fields: [hackathonId], references: [id], onDelete: Cascade)
+  
+  @@unique([userId, badgeId, hackathonId])
+  @@index([userId])
+  @@index([badgeId])
+  @@index([hackathonId])
+  @@index([earnedAt])
+}
+
+model Challenge {
+  id          String   @id @default(cuid())
+  hackathonId String?
+  
+  // Challenge info
+  title       String
+  description String
+  challengeType ChallengeType
+  
+  // Requirements
+  requirement Json     // Specific requirements
+  points      Int      @default(50)
+  
+  // Timing
+  startDate   DateTime
+  endDate     DateTime
+  isDaily     Boolean  @default(true)
+  isActive    Boolean  @default(true)
+  
+  // NFT Reward
+  nftReward   Boolean  @default(false)
+  nftMetadata Json?
+  
+  // Timestamps
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  // Relations
+  hackathon   Hackathon? @relation(fields: [hackathonId], references: [id], onDelete: Cascade)
+  userChallenges UserChallenge[]
+  
+  @@index([hackathonId])
+  @@index([challengeType])
+  @@index([startDate])
+  @@index([endDate])
+  @@index([isActive])
+}
+
+enum ChallengeType {
+  PROJECT_UPDATE
+  FEEDBACK_GIVEN
+  NETWORKING_JOIN
+  CODE_COMMIT
+  DEMO_SHARE
+  SOCIAL_SHARE
+  CUSTOM
+}
+
+model UserChallenge {
+  id          String   @id @default(cuid())
+  userId      String
+  challengeId String
+  hackathonId String?
+  
+  // Completion
+  completedAt DateTime @default(now())
+  pointsEarned Int
+  nftTokenId   String?  // NFT token ID if minted
+  nftTxHash    String?  // Transaction hash for NFT mint
+  
+  // Relations
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  challenge   Challenge @relation(fields: [challengeId], references: [id], onDelete: Cascade)
+  hackathon   Hackathon? @relation(fields: [hackathonId], references: [id], onDelete: Cascade)
+  
+  @@unique([userId, challengeId, hackathonId])
+  @@index([userId])
+  @@index([challengeId])
+  @@index([hackathonId])
+  @@index([completedAt])
+}
+
+model LeaderboardEntry {
+  id          String   @id @default(cuid())
+  userId      String
+  hackathonId String
+  
+  // Scores
+  totalScore  Int      @default(0)
+  badgeCount  Int      @default(0)
+  projectCount Int     @default(0)
+  challengeCount Int   @default(0)
+  
+  // Ranking
+  rank        Int?
+  previousRank Int?
+  
+  // Timestamps
+  lastUpdated DateTime @default(now())
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  // Relations
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  hackathon   Hackathon @relation(fields: [hackathonId], references: [id], onDelete: Cascade)
+  
+  @@unique([userId, hackathonId])
+  @@index([userId])
+  @@index([hackathonId])
+  @@index([totalScore])
+  @@index([rank])
+}
+
+// Team Matching Models
+
+model TeamMatchingProfile {
+  id              String    @id @default(cuid())
+  userId          String    @unique
+  hackathonId     String
+  
+  // Skills
+  skills          String[]  // ["Solidity", "React", "Node.js", "DeFi", "NFT"]
+  skillLevels     Json?     // { "Solidity": "expert", "React": "intermediate", ... }
+  
+  // GitHub Integration
+  githubUsername  String?
+  githubUrl       String?
+  githubData      Json?     // { repos: [...], languages: {...}, activity: {...} }
+  githubAnalyzedAt DateTime?
+  
+  // Preferences
+  lookingFor      String[]  // ["frontend", "backend", "smart-contracts", "design"]
+  preferredRole   String?   // "leader", "member", "flexible"
+  teamSize        Json?     // { min: 2, max: 5, preferred: 4 }
+  
+  // Availability
+  availability    String?   // "full-time", "part-time", "weekend"
+  availableHours Json?     // { start: "09:00", end: "18:00", timezone: "UTC+3" }
+  
+  // Additional Info
+  bio             String?
+  experience      String?   // "beginner", "intermediate", "advanced", "expert"
+  previousProjects Json?    // Array of previous project descriptions
+  interests       String[]  // Additional interests/topics
+  
+  // Status
+  isActive        Boolean   @default(true)
+  isLookingForTeam Boolean @default(true)
+  
+  // AI Analysis
+  aiAnalysis      Json?     // AI-generated analysis of skills and compatibility
+  lastAnalyzedAt  DateTime?
+  
+  // Timestamps
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  
+  // Relations
+  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  hackathon      Hackathon @relation(fields: [hackathonId], references: [id], onDelete: Cascade)
+  
+  @@index([hackathonId])
+  @@index([userId])
+  @@index([isActive])
+  @@index([isLookingForTeam])
+  @@index([createdAt])
+}
+
+model TeamMatch {
+  id              String    @id @default(cuid())
+  senderId       String
+  receiverId     String
+  hackathonId    String
+  
+  // Match Details
+  matchScore     Float     // 0.0 - 1.0 compatibility score
+  skillScore     Float     // Skill complementarity score
+  timezoneScore  Float     // Timezone compatibility score
+  githubScore    Float?    // GitHub activity/quality score
+  
+  // AI Analysis
+  aiReasoning    String?   // AI-generated explanation of the match
+  strengths      String[]  // What makes this a good match
+  considerations String[]  // Things to consider
+  
+  // Status
+  status         MatchStatus @default(PENDING)
+  
+  // Actions
+  senderAction   MatchAction? // "interested", "not_interested", null
+  receiverAction MatchAction? // "interested", "not_interested", null
+  
+  // Metadata
+  metadata       Json?     // Additional match data
+  
+  // Timestamps
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+  respondedAt    DateTime?
+  
+  // Relations
+  sender         User      @relation("MatchSender", fields: [senderId], references: [id], onDelete: Cascade)
+  receiver       User      @relation("MatchReceiver", fields: [receiverId], references: [id], onDelete: Cascade)
+  hackathon      Hackathon @relation(fields: [hackathonId], references: [id], onDelete: Cascade)
+  
+  @@unique([senderId, receiverId, hackathonId])
+  @@index([senderId])
+  @@index([receiverId])
+  @@index([hackathonId])
+  @@index([status])
+  @@index([matchScore])
+  @@index([createdAt])
+}
+
+enum MatchStatus {
+  PENDING
+  MUTUAL_INTEREST
+  NOT_INTERESTED
+  EXPIRED
+}
+
+enum MatchAction {
+  INTERESTED
+  NOT_INTERESTED
 }
 

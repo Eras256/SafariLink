@@ -60,5 +60,9 @@ export const API_ENDPOINTS = {
     LIST: '/api/grants',
     DETAIL: (id: string) => `/api/grants/${id}`,
   },
+  ORGANIZER: {
+    DASHBOARD: (id: string) => `/api/organizer/${id}/dashboard`,
+    REALTIME_METRICS: (id: string) => `/api/organizer/${id}/metrics/realtime`,
+  },
 } as const;
 

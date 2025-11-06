@@ -140,17 +140,6 @@ export const getRoom = async (req: Request, res: Response) => {
         },
         breakoutSessions: {
           where: { isActive: true },
-          include: {
-            _count: {
-              select: {
-                room: {
-                  select: {
-                    participants: { where: { isActive: true } },
-                  },
-                },
-              },
-            },
-          },
         },
       },
     });
@@ -159,11 +148,21 @@ export const getRoom = async (req: Request, res: Response) => {
       return res.status(404).json({ error: 'Room not found' });
     }
 
+    // Get participant and message counts separately
+    const [participantCount, messageCount] = await Promise.all([
+      prisma.roomParticipant.count({
+        where: { roomId: room.id, isActive: true },
+      }),
+      prisma.roomMessage.count({
+        where: { roomId: room.id },
+      }),
+    ]);
+
     res.json({
       room: {
         ...room,
-        participantCount: room.participants.length,
-        messageCount: room.messages.length,
+        participantCount,
+        messageCount,
       },
     });
   } catch (error: any) {

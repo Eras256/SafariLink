@@ -20,12 +20,14 @@ contract NFTCertificate is ERC721, AccessControl {
     struct Certificate {
         uint256 hackathonId;
         string hackathonName;
-        string achievement; // "Participant", "Winner", "1st Place"
+        string achievement; // "Participant", "Winner", "1st Place", "Badge Name"
+        string badgeType; // "CERTIFICATE", "BADGE", "CHALLENGE"
         uint256 timestamp;
     }
 
     mapping(uint256 => Certificate) public certificates;
     mapping(address => uint256[]) public ownerCertificates;
+    mapping(address => mapping(string => uint256[])) public ownerBadges; // address => badgeType => tokenIds
 
     string public baseURI;
 
@@ -34,6 +36,14 @@ contract NFTCertificate is ERC721, AccessControl {
         address indexed recipient,
         uint256 hackathonId,
         string achievement
+    );
+
+    event BadgeMinted(
+        uint256 indexed tokenId,
+        address indexed recipient,
+        uint256 hackathonId,
+        string badgeName,
+        string rarity
     );
 
     constructor(string memory _baseURI) ERC721("SafariLink Certificate", "SLC") {
@@ -64,6 +74,7 @@ contract NFTCertificate is ERC721, AccessControl {
             hackathonId: _hackathonId,
             hackathonName: _hackathonName,
             achievement: _achievement,
+            badgeType: "CERTIFICATE",
             timestamp: block.timestamp
         });
 
@@ -72,6 +83,54 @@ contract NFTCertificate is ERC721, AccessControl {
         emit CertificateMinted(newTokenId, _to, _hackathonId, _achievement);
 
         return newTokenId;
+    }
+
+    /**
+     * @notice Mint badge NFT as reward
+     * @param _to Recipient address
+     * @param _hackathonId Hackathon ID
+     * @param _hackathonName Hackathon name
+     * @param _badgeName Badge name
+     * @param _rarity Badge rarity (COMMON, RARE, EPIC, LEGENDARY)
+     */
+    function mintBadge(
+        address _to,
+        uint256 _hackathonId,
+        string memory _hackathonName,
+        string memory _badgeName,
+        string memory _rarity
+    ) external onlyRole(MINTER_ROLE) returns (uint256) {
+        _tokenIds.increment();
+        uint256 newTokenId = _tokenIds.current();
+
+        _safeMint(_to, newTokenId);
+
+        certificates[newTokenId] = Certificate({
+            hackathonId: _hackathonId,
+            hackathonName: _hackathonName,
+            achievement: _badgeName,
+            badgeType: "BADGE",
+            timestamp: block.timestamp
+        });
+
+        ownerCertificates[_to].push(newTokenId);
+        ownerBadges[_to][_rarity].push(newTokenId);
+
+        emit BadgeMinted(newTokenId, _to, _hackathonId, _badgeName, _rarity);
+
+        return newTokenId;
+    }
+
+    /**
+     * @notice Get all badges owned by address
+     * @param _owner Owner address
+     * @param _rarity Badge rarity (optional, empty string for all)
+     */
+    function getBadges(address _owner, string memory _rarity) external view returns (uint256[] memory) {
+        if (bytes(_rarity).length == 0) {
+            return ownerCertificates[_owner];
+        }
+        return ownerBadges[_owner][_rarity];
     }
 
     /**

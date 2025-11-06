@@ -220,6 +220,178 @@ export class WebSocketService {
         socket.to(roomId).emit('message:typing', { userId, isTyping });
       });
 
+      // Feedback subscription
+      socket.on('feedback:subscribe', async (data: { projectId: string; userId?: string }) => {
+        try {
+          const { projectId, userId } = data;
+
+          // Verify project exists
+          const project = await prisma.project.findUnique({
+            where: { id: projectId },
+            select: { id: true, hackathonId: true },
+          });
+
+          if (!project) {
+            socket.emit('error', { message: 'Project not found' });
+            return;
+          }
+
+          // Join feedback room
+          await socket.join(`feedback:${projectId}`);
+          console.log(`User ${userId} subscribed to feedback for project ${projectId}`);
+
+          // Send initial feedback
+          const feedback = await prisma.comment.findMany({
+            where: { projectId, isPublic: true },
+            include: {
+              user: {
+                select: {
+                  id: true,
+                  username: true,
+                  avatar: true,
+                  walletAddress: true,
+                },
+              },
+            },
+            orderBy: { createdAt: 'desc' },
+            take: 50,
+          });
+
+          socket.emit('feedback:list', { feedback });
+        } catch (error: any) {
+          console.error('Error subscribing to feedback:', error);
+          socket.emit('error', { message: error.message });
+        }
+      });
+
+      // Feedback unsubscribe
+      socket.on('feedback:unsubscribe', async (data: { projectId: string }) => {
+        try {
+          const { projectId } = data;
+          await socket.leave(`feedback:${projectId}`);
+          console.log(`Unsubscribed from feedback for project ${projectId}`);
+        } catch (error: any) {
+          console.error('Error unsubscribing from feedback:', error);
+        }
+      });
+
+      // New feedback
+      socket.on('feedback:create', async (data: {
+        projectId: string;
+        userId: string;
+        content: string;
+        rating?: number;
+        feedbackType?: string;
+        userRole?: string;
+        isPublic?: boolean;
+      }) => {
+        try {
+          const { projectId, userId, content, rating, feedbackType = 'COMMENT', userRole = 'PARTICIPANT', isPublic = true } = data;
+
+          // Verify project exists
+          const project = await prisma.project.findUnique({
+            where: { id: projectId },
+            select: { id: true, hackathonId: true, creatorId: true },
+          });
+
+          if (!project) {
+            socket.emit('error', { message: 'Project not found' });
+            return;
+          }
+
+          // Get user info
+          const user = await prisma.user.findUnique({
+            where: { id: userId },
+            select: {
+              id: true,
+              username: true,
+              avatar: true,
+              walletAddress: true,
+            },
+          });
+
+          if (!user) {
+            socket.emit('error', { message: 'User not found' });
+            return;
+          }
+
+          // Determine user role
+          let finalUserRole = userRole;
+          if (userRole === 'PARTICIPANT') {
+            const hackathon = await prisma.hackathon.findUnique({
+              where: { id: project.hackathonId },
+              select: {
+                judges: true,
+                organizerId: true,
+              },
+            });
+
+            if (hackathon) {
+              const judges = (hackathon.judges as any[]) || [];
+              const isJudge = judges.some(
+                (j: any) => j.walletAddress?.toLowerCase() === user.walletAddress.toLowerCase()
+              );
+              const isOrganizer = hackathon.organizerId === user.id;
+
+              if (isJudge) finalUserRole = 'JUDGE';
+              else if (isOrganizer) finalUserRole = 'ORGANIZER';
+            }
+          }
+
+          // Create feedback
+          const feedback = await prisma.comment.create({
+            data: {
+              userId,
+              projectId,
+              content: content.trim(),
+              rating: rating || null,
+              feedbackType: feedbackType as any,
+              userRole: finalUserRole as any,
+              isPublic,
+            },
+            include: {
+              user: {
+                select: {
+                  id: true,
+                  username: true,
+                  avatar: true,
+                  walletAddress: true,
+                },
+              },
+              project: {
+                select: {
+                  id: true,
+                  name: true,
+                  hackathonId: true,
+                },
+              },
+            },
+          });
+
+          // Broadcast to all subscribers
+          this.io.to(`feedback:${projectId}`).emit('feedback:new', { feedback });
+
+          // Notify project creator if different from feedback author
+          if (project.creatorId !== userId) {
+            const creatorSocketId = this.userSockets.get(project.creatorId);
+            if (creatorSocketId) {
+              this.io.to(creatorSocketId).emit('feedback:notification', {
+                type: 'new_feedback',
+                projectId,
+                projectName: project.id,
+                feedback,
+                message: `${user.username || 'Someone'} left feedback on your project`,
+              });
+            }
+          }
+
+          console.log(`Feedback created for project ${projectId} by user ${userId}`);
+        } catch (error: any) {
+          console.error('Error creating feedback:', error);
+          socket.emit('error', { message: error.message });
+        }
+      });
+
       // WebRTC signaling
       socket.on('webrtc:offer', (data: { roomId: string; targetUserId: string; offer: any }) => {
         const { roomId, targetUserId, offer } = data;
@@ -283,6 +455,62 @@ export class WebSocketService {
         }
       });
 
+      // Dashboard metrics subscription
+      socket.on('dashboard:subscribe', async (data: { hackathonId: string; userId?: string; walletAddress?: string }) => {
+        try {
+          const { hackathonId, userId, walletAddress } = data;
+
+          // Verify user is organizer
+          const hackathon = await prisma.hackathon.findUnique({
+            where: { id: hackathonId },
+            select: {
+              organizerId: true,
+              organizerWallet: true,
+            },
+          });
+
+          if (!hackathon) {
+            socket.emit('error', { message: 'Hackathon not found' });
+            return;
+          }
+
+          // Verify organizer: check by userId or walletAddress
+          let isOrganizer = false;
+          if (userId && hackathon.organizerId === userId) {
+            isOrganizer = true;
+          } else if (walletAddress && hackathon.organizerWallet?.toLowerCase() === walletAddress.toLowerCase()) {
+            isOrganizer = true;
+          }
+
+          if (!isOrganizer) {
+            socket.emit('error', { message: 'Unauthorized: Not the organizer' });
+            return;
+          }
+
+          // Join dashboard room
+          await socket.join(`dashboard:${hackathonId}`);
+          console.log(`User ${userId} subscribed to dashboard for hackathon ${hackathonId}`);
+
+          // Send initial metrics
+          const metrics = await this.getDashboardMetrics(hackathonId);
+          socket.emit('dashboard:metrics', metrics);
+        } catch (error: any) {
+          console.error('Error subscribing to dashboard:', error);
+          socket.emit('error', { message: error.message });
+        }
+      });
+
+      // Dashboard metrics unsubscribe
+      socket.on('dashboard:unsubscribe', async (data: { hackathonId: string }) => {
+        try {
+          const { hackathonId } = data;
+          await socket.leave(`dashboard:${hackathonId}`);
+          console.log(`Unsubscribed from dashboard for hackathon ${hackathonId}`);
+        } catch (error: any) {
+          console.error('Error unsubscribing from dashboard:', error);
+        }
+      });
+
       // Disconnect
       socket.on('disconnect', async () => {
         console.log(`Socket disconnected: ${socket.id}`);
@@ -322,6 +550,84 @@ export class WebSocketService {
         }
       });
     });
+
+    // Start periodic metrics updates for all active dashboard subscriptions
+    this.startDashboardMetricsBroadcast();
+  }
+
+  /**
+   * Get dashboard metrics for a hackathon
+   */
+  private async getDashboardMetrics(hackathonId: string) {
+    const [activeParticipants, recentMessages, recentProjects, totalParticipants] = await Promise.all([
+      prisma.roomParticipant.count({
+        where: {
+          room: {
+            hackathonId,
+          },
+          isActive: true,
+        },
+      }),
+      prisma.roomMessage.count({
+        where: {
+          room: {
+            hackathonId,
+          },
+          createdAt: {
+            gte: new Date(Date.now() - 60 * 60 * 1000), // Last hour
+          },
+          isDeleted: false,
+        },
+      }),
+      prisma.project.count({
+        where: {
+          hackathonId,
+          submittedAt: {
+            gte: new Date(Date.now() - 60 * 60 * 1000), // Last hour
+          },
+        },
+      }),
+      prisma.hackathonRegistration.count({
+        where: { hackathonId },
+      }),
+    ]);
+
+    return {
+      timestamp: new Date().toISOString(),
+      activeParticipants,
+      recentMessages,
+      recentProjects,
+      totalParticipants,
+    };
+  }
+
+  /**
+   * Broadcast dashboard metrics updates to all subscribed organizers
+   */
+  private startDashboardMetricsBroadcast() {
+    setInterval(async () => {
+      try {
+        // Get all active hackathons
+        const hackathons = await prisma.hackathon.findMany({
+          where: {
+            status: {
+              in: ['ONGOING', 'REGISTRATION_OPEN', 'JUDGING'],
+            },
+          },
+          select: {
+            id: true,
+          },
+        });
+
+        // Broadcast metrics for each hackathon
+        for (const hackathon of hackathons) {
+          const metrics = await this.getDashboardMetrics(hackathon.id);
+          this.io.to(`dashboard:${hackathon.id}`).emit('dashboard:metrics', metrics);
+        }
+      } catch (error) {
+        console.error('Error broadcasting dashboard metrics:', error);
+      }
+    }, 30000); // Update every 30 seconds
   }
 
   public getIO(): SocketIOServer {
@@ -335,6 +641,13 @@ export class WebSocketService {
 
   public emitToRoom(roomId: string, event: string, data: any) {
     this.io.to(roomId).emit(event, data);
+  }
+
+  public emitToUser(userId: string, event: string, data: any) {
+    const socketId = this.userSockets.get(userId);
+    if (socketId) {
+      this.io.to(socketId).emit(event, data);
+    }
   }
 }
 

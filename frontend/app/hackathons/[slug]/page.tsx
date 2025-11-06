@@ -13,6 +13,7 @@ import { RealTimeFeedback } from '@/components/hackathons/RealTimeFeedback';
 import { Gamification } from '@/components/hackathons/Gamification';
 import { OrganizerDashboard } from '@/components/hackathons/OrganizerDashboard';
 import { AIMentor } from '@/components/hackathons/AIMentor';
+import { TeamMatching } from '@/components/hackathons/TeamMatching';
 import { useAccount } from 'wagmi';
 import { motion } from 'framer-motion';
 import { Users, Calendar, MapPin, Trophy, Code, MessageSquare, Video, Award } from 'lucide-react';
@@ -28,6 +29,7 @@ interface Hackathon {
   bannerImage?: string;
   logoImage?: string;
   organizerName: string;
+  organizerWallet?: string;
   eventStart: string;
   eventEnd: string;
   locationType: 'IN_PERSON' | 'HYBRID' | 'ONLINE';
@@ -43,11 +45,22 @@ interface Hackathon {
 
 // Inner component that uses wagmi hooks - must be inside WagmiProvider
 // This component is only rendered after mount to avoid SSR issues
+interface Project {
+  id: string;
+  name: string;
+  slug: string;
+  description: string;
+  status: string;
+}
+
 function HackathonContentInner({ slug }: { slug: string }) {
   const [address, setAddress] = useState<string | undefined>(undefined);
   const [hackathon, setHackathon] = useState<Hackathon | null>(null);
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<'overview' | 'networking' | 'mentor' | 'projects' | 'leaderboard'>('overview');
+  const [loadingProjects, setLoadingProjects] = useState(false);
+  const [activeTab, setActiveTab] = useState<'overview' | 'networking' | 'mentor' | 'projects' | 'feedback' | 'leaderboard' | 'team-matching'>('overview');
   const [isOrganizer, setIsOrganizer] = useState(false);
 
   // Hooks must be called unconditionally (React rules)
@@ -62,6 +75,30 @@ function HackathonContentInner({ slug }: { slug: string }) {
       setAddress(undefined);
     }
   }, [accountAddress]);
+
+  // Fetch projects for hackathon
+  const fetchProjects = async (hackathonId: string) => {
+    setLoadingProjects(true);
+    try {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
+      const response = await fetch(`${apiUrl}/api/hackathons/${hackathonId}/projects`);
+      
+      if (response.ok) {
+        const data = await response.json();
+        const projectsList = data.projects || [];
+        setProjects(projectsList);
+        
+        // Auto-select first project if available
+        if (projectsList.length > 0 && !selectedProjectId) {
+          setSelectedProjectId(projectsList[0].id);
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching projects:', error);
+    } finally {
+      setLoadingProjects(false);
+    }
+  };
 
   useEffect(() => {
     const fetchHackathon = async () => {
@@ -97,8 +134,23 @@ function HackathonContentInner({ slug }: { slug: string }) {
           if (response && response.ok) {
             try {
               const data = await response.json();
-              setHackathon(data.hackathon || data);
+              const hackathonData = data.hackathon || data;
+              setHackathon(hackathonData);
+              
+              // Check if current user is organizer
+              if (address && hackathonData.organizerWallet) {
+                setIsOrganizer(
+                  hackathonData.organizerWallet.toLowerCase() === address.toLowerCase()
+                );
+              }
+              
               setLoading(false);
+              
+              // Fetch projects for this hackathon
+              if (hackathonData.id) {
+                fetchProjects(hackathonData.id);
+              }
+              
               return; // Successfully fetched from API
             } catch (parseError) {
               // JSON parse error - use fallback
@@ -124,13 +176,13 @@ function HackathonContentInner({ slug }: { slug: string }) {
       }
 
       // Fallback to mock data (works without backend)
-      setHackathon({
+      const fallbackHackathon = {
         id: '1',
         slug: slug,
         name: 'ETH Safari 2025',
         tagline: 'Unleash Innovation. Empower Africa. Build the Future.',
         description: 'Virtual hackathon for Web3 builders in Africa',
-        locationType: 'ONLINE',
+        locationType: 'ONLINE' as 'IN_PERSON' | 'HYBRID' | 'ONLINE',
         chains: ['arbitrum', 'base', 'optimism'],
         totalPrizePool: 12500,
         currency: 'USDC',
@@ -139,16 +191,29 @@ function HackathonContentInner({ slug }: { slug: string }) {
         status: 'ONGOING',
         tags: ['Web3', 'DeFi', 'NFT', 'AI'],
         organizerName: 'ETH Safari Team',
+        organizerWallet: '', // Will be set if available
         eventStart: new Date().toISOString(),
         eventEnd: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
-      });
+      };
+      setHackathon(fallbackHackathon);
       setLoading(false);
     };
 
     if (slug) {
       fetchHackathon();
     }
-  }, [slug]);
+  }, [slug, address]);
+
+  // Update organizer status when address changes
+  useEffect(() => {
+    if (hackathon && address) {
+      setIsOrganizer(
+        hackathon.organizerWallet?.toLowerCase() === address.toLowerCase()
+      );
+    } else {
+      setIsOrganizer(false);
+    }
+  }, [hackathon, address]);
 
   if (loading) {
     return (
@@ -182,7 +247,9 @@ function HackathonContentInner({ slug }: { slug: string }) {
     { id: 'overview', label: 'Overview', icon: Code },
     { id: 'networking', label: 'Networking', icon: Video },
     { id: 'mentor', label: 'AI Mentor', icon: MessageSquare },
+    { id: 'team-matching', label: 'Team Matching', icon: Users },
     { id: 'projects', label: 'Projects', icon: Code },
+    { id: 'feedback', label: 'Feedback', icon: MessageSquare },
     { id: 'leaderboard', label: 'Leaderboard', icon: Trophy },
   ];
 
@@ -348,11 +415,83 @@ function HackathonContentInner({ slug }: { slug: string }) {
             </div>
           )}
 
+          {activeTab === 'team-matching' && (
+            <div className="space-y-6">
+              <div className="glassmorphic p-6 rounded-lg">
+                <h2 className="text-2xl font-bold text-white mb-4">Team Matching Inteligente</h2>
+                <p className="text-white/80 mb-6">
+                  AI que conecta participantes basado en skills complementarios, timezone y preferencias.
+                  Análisis de GitHub incluido.
+                </p>
+                <TeamMatching hackathonId={hackathon.id} userId={address} />
+              </div>
+            </div>
+          )}
+
           {activeTab === 'projects' && (
             <div className="space-y-6">
               <div className="glassmorphic p-6 rounded-lg">
                 <h2 className="text-2xl font-bold text-white mb-4">Projects</h2>
                 <p className="text-white/80">Projects section coming soon...</p>
+              </div>
+            </div>
+          )}
+
+          {activeTab === 'feedback' && (
+            <div className="space-y-6">
+              <div className="glassmorphic p-6 rounded-lg">
+                <h2 className="text-2xl font-bold text-white mb-4">Feedback en Tiempo Real</h2>
+                <p className="text-white/80 mb-6">
+                  Los mentores y jueces pueden dar feedback inmediato durante el desarrollo del proyecto.
+                  Los comentarios son públicos y se actualizan en tiempo real.
+                </p>
+                
+                {/* Project Selector */}
+                {loadingProjects ? (
+                  <div className="bg-white/5 rounded-lg p-4 mb-4">
+                    <p className="text-white/60 text-sm">Cargando proyectos...</p>
+                  </div>
+                ) : projects.length > 0 ? (
+                  <div className="bg-white/5 rounded-lg p-4 mb-4">
+                    <label className="block text-white/80 text-sm font-medium mb-2">
+                      Selecciona un proyecto para ver su feedback:
+                    </label>
+                    <select
+                      value={selectedProjectId || ''}
+                      onChange={(e) => setSelectedProjectId(e.target.value)}
+                      className="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    >
+                      {projects.map((project) => (
+                        <option key={project.id} value={project.id}>
+                          {project.name} ({project.status})
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                ) : (
+                  <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-lg p-4 mb-4">
+                    <p className="text-yellow-400 text-sm">
+                      <strong>No hay proyectos disponibles aún.</strong> Los proyectos aparecerán aquí una vez que los participantes los envíen.
+                    </p>
+                  </div>
+                )}
+
+                {hackathon && selectedProjectId ? (
+                  <div style={{ height: '600px', minHeight: '600px' }}>
+                    <RealTimeFeedback
+                      hackathonId={hackathon.id}
+                      projectId={selectedProjectId}
+                      userId={address}
+                      userRole="PARTICIPANT"
+                    />
+                  </div>
+                ) : hackathon && !selectedProjectId && projects.length === 0 ? (
+                  <div className="bg-white/5 rounded-lg p-8 text-center">
+                    <p className="text-white/60">
+                      Selecciona un proyecto o espera a que se envíen proyectos para ver feedback.
+                    </p>
+                  </div>
+                ) : null}
               </div>
             </div>
           )}
@@ -369,13 +508,10 @@ function HackathonContentInner({ slug }: { slug: string }) {
       </section>
 
       {/* Organizer Dashboard (if organizer) */}
-      {isOrganizer && (
+      {isOrganizer && hackathon && (
         <section className="px-4 pb-20">
           <div className="max-w-7xl mx-auto">
-            <div className="glassmorphic p-6 rounded-lg">
-              <h2 className="text-2xl font-bold text-white mb-4">Organizer Dashboard</h2>
-              <OrganizerDashboard hackathonId={hackathon.id} />
-            </div>
+            <OrganizerDashboard hackathonId={hackathon.id} />
           </div>
         </section>
       )}
