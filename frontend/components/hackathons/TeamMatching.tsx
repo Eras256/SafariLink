@@ -637,6 +637,11 @@ export function TeamMatching({ hackathonId, userId }: TeamMatchingProps) {
                 const candidate = match.candidate || (match.senderId === address ? match.receiver : match.sender);
                 const isSender = match.senderId === address;
                 const userAction = isSender ? match.senderAction : match.receiverAction;
+                
+                // Get user info from candidate (could be TeamMatchingProfile or User object)
+                const candidateUser = (candidate as any)?.user || candidate;
+                const candidateAvatar = candidateUser?.avatar;
+                const candidateUsername = candidateUser?.username || 'Usuario';
 
                 return (
                   <motion.div
@@ -647,10 +652,10 @@ export function TeamMatching({ hackathonId, userId }: TeamMatchingProps) {
                   >
                     <div className="flex items-start justify-between mb-4">
                       <div className="flex items-center gap-4">
-                        {candidate?.user?.avatar ? (
+                        {candidateAvatar ? (
                           <img
-                            src={candidate.user.avatar}
-                            alt={candidate.user.username || 'User'}
+                            src={candidateAvatar}
+                            alt={candidateUsername}
                             className="w-16 h-16 rounded-full"
                           />
                         ) : (
@@ -660,7 +665,7 @@ export function TeamMatching({ hackathonId, userId }: TeamMatchingProps) {
                         )}
                         <div>
                           <h4 className="text-lg font-semibold text-white">
-                            {candidate?.user?.username || 'Usuario'}
+                            {candidateUsername}
                           </h4>
                           <p className="text-white/60 text-sm">
                             Compatibilidad: {(match.matchScore * 100).toFixed(0)}%
@@ -745,10 +750,10 @@ export function TeamMatching({ hackathonId, userId }: TeamMatchingProps) {
                             </div>
                           </div>
                         )}
-                        {candidate.user?.timezone && (
+                        {candidateUser?.timezone && (
                           <div className="flex items-center gap-2 text-white/60 text-sm">
                             <MapPin className="w-4 h-4" />
-                            {candidate.user.timezone}
+                            {candidateUser.timezone}
                           </div>
                         )}
                       </div>
