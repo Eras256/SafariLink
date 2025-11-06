@@ -735,11 +735,11 @@ export function TeamMatching({ hackathonId, userId }: TeamMatchingProps) {
                     {/* Candidate Info */}
                     {candidate && (
                       <div className="space-y-2 mb-4">
-                        {candidate.skills && candidate.skills.length > 0 && (
+                        {(candidate as any)?.skills && (candidate as any).skills.length > 0 && (
                           <div>
                             <h5 className="text-sm font-semibold text-white/80 mb-2">Skills</h5>
                             <div className="flex flex-wrap gap-2">
-                              {candidate.skills.slice(0, 5).map((skill) => (
+                              {(candidate as any).skills.slice(0, 5).map((skill: string) => (
                                 <span
                                   key={skill}
                                   className="px-2 py-1 bg-blue-500/20 text-blue-300 rounded text-xs"
