@@ -2,21 +2,17 @@ FROM python:3.11-slim
 
 WORKDIR /app
 
-# Instalar bash para asegurar que el script funcione
-RUN apt-get update && apt-get install -y bash && rm -rf /var/lib/apt/lists/*
-
 COPY requirements.txt ./
 RUN pip install --no-cache-dir -r requirements.txt
 
 COPY . .
 
-# Hacer el script ejecutable
-RUN chmod +x start.sh
-
 # Railway asignará el puerto dinámicamente
+# Usar exec form con /bin/sh -c para expandir correctamente PORT
 ENV PORT=8000
 EXPOSE 8000
 
-# Usar el script que maneja correctamente la variable PORT
-CMD ["./start.sh"]
+# Solución recomendada por Railway: usar /bin/sh -c con exec form
+# Esto garantiza que la variable PORT se expanda correctamente en tiempo de ejecución
+CMD ["/bin/sh", "-c", "exec uvicorn main:app --host 0.0.0.0 --port ${PORT:-8000}"]
 
