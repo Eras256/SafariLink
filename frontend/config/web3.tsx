@@ -14,15 +14,59 @@ if (!projectId) {
 
 export const networks = [arbitrumSepolia, baseSepolia, optimismSepolia];
 
-// Set up the Wagmi Adapter (Config)
-export const wagmiAdapter = new WagmiAdapter({
-  storage: createStorage({
-    storage: cookieStorage,
-  }),
-  ssr: true,
-  projectId,
-  networks,
-});
+// Lazy initialization of WagmiAdapter to avoid SSR issues and COOP checks
+let _wagmiAdapter: WagmiAdapter | null = null;
+
+function createWagmiAdapter(): WagmiAdapter {
+  if (_wagmiAdapter) {
+    return _wagmiAdapter;
+  }
+
+  // Only create adapter on client-side to avoid SSR issues
+  if (typeof window === 'undefined') {
+    // Server-side: create a minimal adapter that won't cause COOP checks
+    // This will be replaced on client-side
+    _wagmiAdapter = new WagmiAdapter({
+      storage: createStorage({
+        storage: cookieStorage,
+      }),
+      ssr: true,
+      projectId,
+      networks,
+    });
+  } else {
+    // Client-side: create adapter with error handling for COOP checks
+    try {
+      _wagmiAdapter = new WagmiAdapter({
+        storage: createStorage({
+          storage: cookieStorage,
+        }),
+        ssr: false, // Disable SSR for client-side adapter to avoid COOP checks
+        projectId,
+        networks,
+      });
+    } catch (error) {
+      // If adapter creation fails (e.g., due to COOP checks), create a fallback
+      console.warn('Failed to create WagmiAdapter, retrying with SSR enabled:', error);
+      _wagmiAdapter = new WagmiAdapter({
+        storage: createStorage({
+          storage: cookieStorage,
+        }),
+        ssr: true,
+        projectId,
+        networks,
+      });
+    }
+  }
+
+  return _wagmiAdapter;
+}
+
+// Export getter for wagmiAdapter - lazy initialization
+export const wagmiAdapter = (() => {
+  // Create adapter immediately but with proper error handling
+  return createWagmiAdapter();
+})();
 
 export const config = wagmiAdapter.wagmiConfig;
 

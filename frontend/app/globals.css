@@ -197,3 +197,51 @@ body {
   background: rgba(255, 255, 255, 0.3);
 }
 
+/* Code syntax highlighting */
+pre code {
+  display: block;
+  font-family: 'Fira Code', 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+  font-size: 0.875rem;
+  line-height: 1.6;
+  color: #e5e7eb;
+  tab-size: 2;
+}
+
+pre code.language-solidity,
+pre code.language-sol {
+  color: #e5e7eb;
+}
+
+pre code .keyword {
+  color: #c084fc; /* purple */
+}
+
+pre code .string {
+  color: #34d399; /* green */
+}
+
+pre code .number {
+  color: #fbbf24; /* yellow */
+}
+
+pre code .comment {
+  color: #6b7280; /* gray */
+  font-style: italic;
+}
+
+pre code .function {
+  color: #60a5fa; /* blue */
+}
+
+pre code .variable {
+  color: #f472b6; /* pink */
+}
+
+pre code .operator {
+  color: #a78bfa; /* purple */
+}
+
+pre code .punctuation {
+  color: #94a3b8; /* slate */
+}
+

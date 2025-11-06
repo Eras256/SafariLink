@@ -46,6 +46,8 @@ model User {
   grants            GrantApplication[]
   votes             Vote[]
   comments          Comment[]
+  roomParticipants  RoomParticipant[]
+  roomMessages      RoomMessage[]
   
   @@index([walletAddress])
   @@index([email])
@@ -125,6 +127,7 @@ model Hackathon {
   // Relations
   registrations     HackathonRegistration[]
   projects          Project[]
+  networkingRooms   NetworkingRoom[]
   
   @@index([status])
   @@index([eventStart])
@@ -156,6 +159,7 @@ model Track {
   
   hackathon     Hackathon  @relation(fields: [hackathonId], references: [id], onDelete: Cascade)
   projects      Project[]
+  networkingRooms NetworkingRoom[]
   
   @@index([hackathonId])
 }
@@ -366,5 +370,152 @@ enum GrantStatus {
   UNDER_REVIEW
   APPROVED
   REJECTED
+}
+
+model NetworkingRoom {
+  id              String    @id @default(cuid())
+  hackathonId     String
+  trackId         String?
+  
+  // Room info
+  name            String
+  description     String?
+  track           String?   // "DeFi", "NFT", "AI", "General", etc.
+  roomType        RoomType  @default(GENERAL)
+  
+  // Settings
+  maxParticipants Int?      @default(50)
+  isPrivate       Boolean   @default(false)
+  password        String?
+  
+  // Video/Audio
+  videoEnabled    Boolean   @default(true)
+  audioEnabled    Boolean   @default(true)
+  
+  // Status
+  isActive        Boolean   @default(true)
+  
+  // Metadata
+  metadata        Json?     // Additional settings, breakout sessions, etc.
+  
+  // Timestamps
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  
+  // Relations
+  hackathon       Hackathon @relation(fields: [hackathonId], references: [id], onDelete: Cascade)
+  track           Track?    @relation(fields: [trackId], references: [id], onDelete: SetNull)
+  participants    RoomParticipant[]
+  messages        RoomMessage[]
+  breakoutSessions BreakoutSession[] @relation("BreakoutSessionRoom")
+  parentBreakoutSessions BreakoutSession[] @relation("BreakoutSessionParent")
+  
+  @@index([hackathonId])
+  @@index([trackId])
+  @@index([track])
+  @@index([isActive])
+}
+
+enum RoomType {
+  GENERAL
+  TRACK_BASED
+  MENTOR_OFFICE_HOURS
+  JUDGE_QA
+  BREAKOUT
+}
+
+model RoomParticipant {
+  id              String    @id @default(cuid())
+  roomId          String
+  userId          String
+  
+  // Status
+  isActive        Boolean   @default(true)
+  joinedAt        DateTime  @default(now())
+  leftAt          DateTime?
+  
+  // Video/Audio state
+  videoEnabled    Boolean   @default(true)
+  audioEnabled    Boolean   @default(true)
+  
+  // WebRTC
+  peerId          String?   // WebRTC peer ID
+  streamId        String?   // Media stream ID
+  
+  // Metadata
+  metadata        Json?     // Position in grid, breakout session, etc.
+  
+  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  room            NetworkingRoom @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  
+  @@unique([roomId, userId])
+  @@index([roomId])
+  @@index([userId])
+  @@index([isActive])
+}
+
+model RoomMessage {
+  id              String    @id @default(cuid())
+  roomId          String
+  userId          String
+  
+  // Message content
+  content         String
+  messageType     MessageType @default(TEXT)
+  
+  // Attachments
+  attachments     Json?     // Files, links, etc.
+  
+  // Status
+  isEdited        Boolean   @default(false)
+  isDeleted       Boolean   @default(false)
+  editedAt        DateTime?
+  
+  // Timestamps
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  
+  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  room            NetworkingRoom @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  
+  @@index([roomId])
+  @@index([userId])
+  @@index([createdAt])
+}
+
+enum MessageType {
+  TEXT
+  SYSTEM
+  FILE
+  LINK
+  EMOJI
+}
+
+model BreakoutSession {
+  id              String    @id @default(cuid())
+  roomId          String
+  parentRoomId    String?   // If this is a sub-session
+  
+  // Session info
+  name            String
+  description     String?
+  
+  // Participants
+  maxParticipants Int?      @default(10)
+  
+  // Status
+  isActive        Boolean   @default(true)
+  startedAt       DateTime  @default(now())
+  endedAt         DateTime?
+  
+  // Metadata
+  metadata        Json?
+  
+  room            NetworkingRoom @relation("BreakoutSessionRoom", fields: [roomId], references: [id], onDelete: Cascade)
+  parentRoom      NetworkingRoom? @relation("BreakoutSessionParent", fields: [parentRoomId], references: [id], onDelete: SetNull)
+  
+  @@index([roomId])
+  @@index([parentRoomId])
+  @@index([isActive])
 }
 

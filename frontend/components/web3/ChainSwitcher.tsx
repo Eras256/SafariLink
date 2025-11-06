@@ -4,14 +4,21 @@ import { useSwitchChain, useAccount } from 'wagmi';
 import { arbitrumSepolia, baseSepolia, optimismSepolia } from 'wagmi/chains';
 import { Button } from '@/components/ui/button';
 import { ChevronDown } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 const chains = [arbitrumSepolia, baseSepolia, optimismSepolia];
 
-export function ChainSwitcher() {
+/**
+ * Internal component that uses Wagmi hooks
+ * This component is only rendered when mounted and WagmiProvider is available
+ */
+function ChainSwitcherContent() {
+  const [isOpen, setIsOpen] = useState(false);
+  
+  // These hooks are only called when this component is rendered,
+  // which happens after mount and when WagmiProvider is available
   const { chain } = useAccount();
   const { switchChain } = useSwitchChain();
-  const [isOpen, setIsOpen] = useState(false);
 
   return (
     <div className="relative">
@@ -51,3 +58,36 @@ export function ChainSwitcher() {
   );
 }
 
+/**
+ * Main ChainSwitcher component
+ * Handles mounting state and only renders ChainSwitcherContent when ready
+ */
+export function ChainSwitcher() {
+  const [mounted, setMounted] = useState(false);
+  const [providerReady, setProviderReady] = useState(false);
+
+  useEffect(() => {
+    // Only set mounted to true after component has mounted on client
+    setMounted(true);
+    
+    // Add a small delay to ensure WagmiProvider is fully mounted
+    // This prevents the "useConfig must be used within WagmiProvider" error
+    const timer = setTimeout(() => {
+      setProviderReady(true);
+    }, 100); // Small delay to ensure provider is ready
+
+    return () => clearTimeout(timer);
+  }, []);
+
+  // Show loading state until mounted and provider is ready (client-side only)
+  if (!mounted || !providerReady) {
+    return (
+      <Button variant="outline" size="sm" className="glassmorphic" disabled>
+        Select Chain
+      </Button>
+    );
+  }
+
+  // Only render ChainSwitcherContent after mount and provider is ready
+  return <ChainSwitcherContent />;
+}

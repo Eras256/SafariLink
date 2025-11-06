@@ -46,7 +46,7 @@ Editar `.env` y agregar:
 DATABASE_URL=postgresql://safarilink:password@localhost:5432/safarilink
 REDIS_URL=redis://localhost:6379
 JWT_SECRET=tu_jwt_secret_min_32_caracteres
-ANTHROPIC_API_KEY=tu_anthropic_api_key
+GEMINI_API_KEY=your_gemini_api_key_here
 SMILE_ID_API_KEY=tu_smile_id_api_key
 GITHUB_TOKEN=tu_github_token
 ```
@@ -89,16 +89,31 @@ forge install
 
 #### AI Services
 
+**Team Matcher:**
 ```bash
-cd ../ai-services/team_matcher
-pip install -r requirements.txt
-
-cd ../plagiarism_detector
-pip install -r requirements.txt
-
-cd ../mentor_bot
+cd ai-services/team_matcher
 pip install -r requirements.txt
 ```
+
+**Plagiarism Detector:**
+```bash
+cd ai-services/plagiarism_detector
+pip install -r requirements.txt
+```
+
+**Mentor Bot (AI Mentor Multilingüe):**
+```bash
+cd ai-services/mentor_bot
+pip install -r requirements.txt
+
+# Configurar API Key de Google Gemini
+export GEMINI_API_KEY=your_gemini_api_key_here
+
+# Ejecutar servicio
+uvicorn main:app --reload --port 8000
+```
+
+**Nota:** Para desarrollo local, usa el puerto 8000. En Docker Compose, el servicio corre en el puerto 8003.
 
 ### 4. Iniciar Base de Datos (Docker)
 
@@ -146,20 +161,32 @@ cd frontend
 npm run dev
 ```
 
-**Terminal 3 - AI Services:**
+**Terminal 3 - Team Matcher:**
 ```bash
-# Team Matcher
 cd ai-services/team_matcher
-uvicorn main:app --host 0.0.0.0 --port 8001
-
-# Plagiarism Detector (en otra terminal)
-cd ai-services/plagiarism_detector
-uvicorn main:app --host 0.0.0.0 --port 8002
-
-# Mentor Bot (en otra terminal)
-cd ai-services/mentor_bot
-uvicorn main:app --host 0.0.0.0 --port 8003
+export GITHUB_TOKEN=tu_github_token
+uvicorn main:app --host 0.0.0.0 --port 8001 --reload
 ```
+
+**Terminal 4 - Plagiarism Detector:**
+```bash
+cd ai-services/plagiarism_detector
+export GITHUB_TOKEN=tu_github_token
+uvicorn main:app --host 0.0.0.0 --port 8002 --reload
+```
+
+**Terminal 5 - Mentor Bot (AI Mentor Multilingüe):**
+```bash
+cd ai-services/mentor_bot
+
+# Configurar API Key de Google Gemini
+export GEMINI_API_KEY=your_gemini_api_key_here
+
+# Ejecutar servicio
+uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+```
+
+**Nota:** El frontend espera el servicio en `http://localhost:8000` por defecto. Si usas Docker Compose, el servicio corre en el puerto 8003 y necesitas configurar `NEXT_PUBLIC_AI_SERVICE_URL=http://localhost:8003` en el frontend.
 
 ### 7. Desplegar Smart Contracts (Opcional para Desarrollo)
 

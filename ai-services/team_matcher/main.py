@@ -17,6 +17,9 @@ class Builder(BaseModel):
     timezone: str
     preferredRole: str  # "developer", "designer", "pm"
     lookingForRoles: List[str]
+    language: Optional[str] = "en"  # Preferred language: "en", "sw", "fr"
+    hackathonId: Optional[str] = None  # For virtual hackathon matching
+    availability: Optional[str] = "full-time"  # "full-time", "part-time", "weekend"
 
 class TeamMatchRequest(BaseModel):
     builder: Builder
@@ -88,22 +91,40 @@ def calculate_compatibility(builder1: Builder, builder2: Builder) -> float:
     score_diff = abs(builder1.builderScore - builder2.builderScore)
     score_compat = max(0, 1 - (score_diff / 500))  # Normalize
     
-    # 4. Timezone compatibility (10% weight)
+    # 4. Timezone compatibility (10% weight) - CRITICAL for virtual hackathons
     # Parse timezone offset
     tz1_offset = int(builder1.timezone.split('UTC')[1].split(':')[0] if 'UTC' in builder1.timezone else 0)
     tz2_offset = int(builder2.timezone.split('UTC')[1].split(':')[0] if 'UTC' in builder2.timezone else 0)
     tz_diff = abs(tz1_offset - tz2_offset)
     tz_compat = max(0, 1 - (tz_diff / 12))
     
-    # Weighted sum
+    # 5. Language compatibility (5% weight) - Important for African participants
+    lang_match = 1.0 if builder1.language == builder2.language else 0.5
+    if builder1.language == "sw" and builder2.language == "sw":
+        lang_match = 1.2  # Bonus for Swahili speakers (often underrepresented)
+    
+    # 6. Availability compatibility (5% weight) - Critical for virtual hackathons
+    avail_match = 1.0
+    if builder1.availability != builder2.availability:
+        # Part-time + weekend is OK, but full-time + part-time is less ideal
+        if builder1.availability == "full-time" and builder2.availability in ["part-time", "weekend"]:
+            avail_match = 0.7
+        elif builder1.availability in ["part-time", "weekend"] and builder2.availability == "full-time":
+            avail_match = 0.7
+        else:
+            avail_match = 0.9
+    
+    # Weighted sum (adjusted for virtual hackathons)
     total_score = (
-        complementary_score * 0.4 +
-        role_match * 0.3 +
-        score_compat * 0.2 +
-        tz_compat * 0.1
+        complementary_score * 0.35 +  # Skills still most important
+        role_match * 0.25 +           # Role compatibility
+        score_compat * 0.15 +         # Experience level
+        tz_compat * 0.15 +            # Timezone MORE important for virtual
+        lang_match * 0.05 +           # Language preference
+        avail_match * 0.05           # Availability matching
     )
     
-    return total_score
+    return min(total_score, 1.0)  # Cap at 1.0
 
 @app.post("/match-team", response_model=TeamMatchResponse)
 async def match_team(request: TeamMatchRequest):

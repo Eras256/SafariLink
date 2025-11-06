@@ -1,14 +1,18 @@
 import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
+import { createServer } from 'http';
 import { config } from './config/database';
 import { securityMiddleware } from './middleware/security.middleware';
 import authRoutes from './routes/auth.routes';
 import hackathonRoutes from './routes/hackathon.routes';
 import projectRoutes from './routes/project.routes';
 import grantRoutes from './routes/grant.routes';
+import networkingRoutes from './routes/networking.routes';
+import { WebSocketService } from './services/websocket.service';
 
 const app = express();
+const httpServer = createServer(app);
 
 // Security middleware
 app.use(securityMiddleware);
@@ -26,6 +30,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/hackathons', hackathonRoutes);
 app.use('/api/projects', projectRoutes);
 app.use('/api/grants', grantRoutes);
+app.use('/api/networking', networkingRoutes);
 
 // Error handling
 app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
@@ -43,9 +48,13 @@ app.use((req, res) => {
 
 const PORT = process.env.PORT || 4000;
 
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
+// Initialize WebSocket service
+const wsService = new WebSocketService(httpServer);
+
+httpServer.listen(PORT, () => {
+  console.log(`HTTP Server running on port ${PORT}`);
+  console.log(`WebSocket Server initialized`);
 });
 
-export { app };
+export { app, httpServer, wsService };
 

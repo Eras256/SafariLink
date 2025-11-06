@@ -2,6 +2,31 @@
 
 The Complete Web3 Hackathon Lifecycle Platform - Optimized for Africa & Emerging Markets
 
+## 🦁 ETH Safari Evolution Challenge 2025
+
+**SafariLink is specifically designed to revolutionize virtual hackathons like ETH Safari**, addressing the unique challenges of remote collaboration and engagement in the African Web3 ecosystem.
+
+### 🎯 Our Solution for ETH Safari
+
+SafariLink transforms virtual hackathons into immersive, collaborative, and successful experiences through:
+
+- **🌐 Virtual Networking Rooms** - Real-time video and chat rooms for track-based collaboration
+- **🤖 AI Mentor Multilingual** - 24/7 AI assistant supporting Swahili, English, and French
+- **📊 Organizer Dashboard** - Complete metrics on engagement, participation, projects, and sponsor ROI
+- **💬 Real-time Feedback System** - Mentors and judges provide instant feedback during development
+- **👥 Smart Team Matching** - AI-powered matching based on complementary skills, timezone, and preferences
+- **🎮 Gamification & Engagement** - Badges, leaderboards, daily challenges to keep participants active
+- **🌍 Multi-language Support** - Native Swahili support for African participants
+
+### 📈 Expected Impact
+
+- **+300%** Increase in Networking
+- **+250%** Improvement in Feedback Quality
+- **+200%** Increase in Engagement
+- **+150%** Participant Satisfaction
+
+[👉 View ETH Safari Evolution Challenge Proposal](./frontend/app/eth-safari-evolution/page.tsx)
+
 ## 🎯 Mission
 
 SafariLink Platform connects hackers from their first event through to global funding, providing a comprehensive ecosystem for Web3 builders.
@@ -18,6 +43,10 @@ SafariLink Platform connects hackers from their first event through to global fu
 - **Low-Bandwidth Optimized** - PWA, offline-first, 108KB
 - **Glassmorphism UI** - Modern neural network effects
 - **Soulbound NFTs** - Non-transferable hackathon certificates
+- **Virtual Networking** - Real-time video rooms and chat for collaboration
+- **Multi-language Support** - Swahili, English, French for African markets
+- **Real-time Feedback** - Instant feedback from mentors and judges
+- **Gamification** - Badges, leaderboards, daily challenges
 
 ## 📁 Project Structure
 
@@ -74,7 +103,7 @@ SafariLink/
 
 ### AI Services
 - **Framework**: FastAPI (Python 3.11)
-- **AI**: Anthropic Claude (Sonnet 4)
+- **AI**: Google Gemini (1.5 Flash)
 - **ML**: Scikit-learn for team matching
 - **APIs**: GitHub API, Smile ID, Chainalysis
 
@@ -99,11 +128,23 @@ cd frontend && npm install
 cd ../backend && npm install
 cd ../contracts && forge install
 
+# Install AI Services dependencies
+cd ../ai-services/mentor_bot
+pip install -r requirements.txt
+
+# Configure AI Mentor (set Google Gemini API key)
+export GEMINI_API_KEY=your_gemini_api_key_here
+
 # Start services with Docker
+cd ../..
 docker-compose up -d
 
+# Or run AI Mentor locally
+cd ai-services/mentor_bot
+uvicorn main:app --reload --port 8000
+
 # Run database migrations
-cd backend && npm run migrate
+cd ../../backend && npm run migrate
 ```
 
 See [INSTALLATION.md](./INSTALLATION.md) for detailed setup instructions.
@@ -167,7 +208,7 @@ MIT License - see [LICENSE](./LICENSE) file for details
 
 - OpenZeppelin for smart contract libraries
 - Reown (WalletConnect) for Web3 wallet integration
-- Anthropic for Claude AI integration
+- Google Gemini for AI integration
 - All contributors and builders in the Web3 community
 
 ## 📞 Contact

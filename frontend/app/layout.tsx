@@ -3,6 +3,7 @@ import { Inter } from 'next/font/google';
 import { headers } from 'next/headers';
 import './globals.css';
 import { Providers } from './providers';
+import { ErrorSuppressor } from '@/components/layout/ErrorSuppressor';
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });
 
@@ -23,6 +24,13 @@ export const metadata: Metadata = {
     description: 'The Complete Web3 Hackathon Lifecycle Platform',
   },
   manifest: '/manifest.json',
+  icons: {
+    icon: [
+      { url: '/favicon.ico', sizes: 'any' },
+      { url: '/favicon.svg', type: 'image/svg+xml' },
+    ],
+    apple: '/favicon.svg',
+  },
   themeColor: '#0a0a0a',
   viewport: {
     width: 'device-width',
@@ -42,6 +50,7 @@ export default async function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={inter.variable}>
+        <ErrorSuppressor />
         <Providers cookies={cookies}>{children}</Providers>
       </body>
     </html>

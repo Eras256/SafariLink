@@ -27,6 +27,12 @@ export function Navbar() {
             <Link href="/hackathons" className="text-white/80 hover:text-white transition">
               Hackathons
             </Link>
+            <Link href="/eth-safari-evolution" className="text-white/80 hover:text-white transition relative group">
+              <span className="relative">
+                🦁 ETH Safari
+                <span className="absolute -top-1 -right-1 w-2 h-2 bg-yellow-400 rounded-full animate-pulse"></span>
+              </span>
+            </Link>
             <Link href="/projects" className="text-white/80 hover:text-white transition">
               Projects
             </Link>
@@ -66,6 +72,16 @@ export function Navbar() {
               onClick={() => setMobileMenuOpen(false)}
             >
               Hackathons
+            </Link>
+            <Link
+              href="/eth-safari-evolution"
+              className="block text-white/80 hover:text-white transition relative"
+              onClick={() => setMobileMenuOpen(false)}
+            >
+              <span className="relative">
+                🦁 ETH Safari Evolution
+                <span className="absolute -top-1 -right-1 w-2 h-2 bg-yellow-400 rounded-full animate-pulse"></span>
+              </span>
             </Link>
             <Link
               href="/projects"

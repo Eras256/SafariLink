@@ -1,5 +1,9 @@
 'use client';
 
+// Force dynamic rendering to avoid SSR issues
+// Note: revalidate and fetchCache are server-only configs and cannot be used in client components
+export const dynamic = 'force-dynamic';
+
 import { useState, useEffect } from 'react';
 import { Navbar } from '@/components/layout/Navbar';
 import { Footer } from '@/components/layout/Footer';
@@ -62,6 +66,7 @@ export interface Hackathon {
 }
 
 export default function HackathonsPage() {
+  const [mounted, setMounted] = useState(false);
   const [hackathons, setHackathons] = useState<Hackathon[]>([]);
   const [filteredHackathons, setFilteredHackathons] = useState<Hackathon[]>([]);
   const [loading, setLoading] = useState(true);
@@ -73,7 +78,13 @@ export default function HackathonsPage() {
     sortBy: 'newest',
   });
 
+  // Only render content after mount to avoid SSR issues
   useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  useEffect(() => {
+    if (!mounted) return; // Don't fetch data until mounted
     // TODO: Reemplazar con llamada real a la API
     const mockHackathons: Hackathon[] = [
       {
@@ -343,7 +354,7 @@ export default function HackathonsPage() {
       setFilteredHackathons(mockHackathons);
       setLoading(false);
     }, 500);
-  }, []);
+  }, [mounted]);
 
   useEffect(() => {
     let filtered = [...hackathons];
@@ -395,6 +406,20 @@ export default function HackathonsPage() {
 
     setFilteredHackathons(filtered);
   }, [hackathons, filters]);
+
+  // Show loading state until mounted to avoid SSR issues
+  // Don't render Navbar during loading to avoid Wagmi hooks issues
+  if (!mounted) {
+    return (
+      <main className="min-h-screen relative">
+        <div className="gradient-mesh" />
+        <NeuralBackground />
+        <div className="flex items-center justify-center min-h-screen">
+          <div className="text-white/60">Loading...</div>
+        </div>
+      </main>
+    );
+  }
 
   return (
     <main className="min-h-screen relative">

@@ -1,9 +1,34 @@
 /** @type {import('next').NextConfig} */
 const withPWA = require('next-pwa')({
   dest: 'public',
-  register: true,
+  register: process.env.NODE_ENV === 'production', // Only register in production
   skipWaiting: true,
-  disable: process.env.NODE_ENV === 'development',
+  disable: process.env.NODE_ENV === 'development', // Disable in development
+  buildExcludes: [/middleware-manifest\.json$/],
+  runtimeCaching: [
+    {
+      // Exclude all API routes from service worker
+      urlPattern: /^https?:\/\/.*\/api\/.*/i,
+      handler: 'NetworkOnly',
+      options: {
+        cacheableResponse: {
+          statuses: [0, 200],
+        },
+        networkTimeoutSeconds: 10,
+      },
+    },
+    {
+      // Exclude external API calls (backend on port 4000, AI service on port 8000)
+      urlPattern: /^http:\/\/localhost:(4000|8000)\/.*/i,
+      handler: 'NetworkOnly',
+      options: {
+        cacheableResponse: {
+          statuses: [0, 200],
+        },
+        networkTimeoutSeconds: 10,
+      },
+    },
+  ],
 });
 
 const nextConfig = {
