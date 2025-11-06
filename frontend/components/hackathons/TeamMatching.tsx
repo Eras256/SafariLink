@@ -630,7 +630,7 @@ export function TeamMatching({ hackathonId, userId }: TeamMatchingProps) {
             {matches.length === 0 ? (
               <div className="glassmorphic p-8 rounded-lg text-center">
                 <Search className="w-16 h-16 text-white/40 mx-auto mb-4" />
-                <p className="text-white/60">No se encontraron matches. Haz clic en "Buscar Matches" para encontrar compañeros.</p>
+                <p className="text-white/60">No se encontraron matches. Haz clic en &quot;Buscar Matches&quot; para encontrar compañeros.</p>
               </div>
             ) : (
               matches.map((match) => {
