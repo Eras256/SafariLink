@@ -393,3 +393,9 @@ def generate_related_questions(question: str, language: str = "en") -> List[str]
 async def health():
     return {"status": "healthy", "service": "mentor-bot"}
 
+# Railway compatibility: leer PORT desde variable de entorno
+if __name__ == "__main__":
+    import uvicorn
+    port = int(os.getenv("PORT", "8000"))
+    uvicorn.run(app, host="0.0.0.0", port=port)
+
