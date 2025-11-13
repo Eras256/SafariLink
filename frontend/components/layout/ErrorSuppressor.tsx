@@ -11,6 +11,7 @@ export function ErrorSuppressor() {
   const originalErrorRef = useRef<typeof console.error | null>(null);
   const originalWarnRef = useRef<typeof console.warn | null>(null);
   const originalLogRef = useRef<typeof console.log | null>(null);
+  const originalFetchRef = useRef<typeof fetch | null>(null);
 
   useEffect(() => {
     if (typeof window === 'undefined') {
@@ -50,6 +51,9 @@ export function ErrorSuppressor() {
         'The strategy could not generate a response',
         'Failed to fetch',
         'net::ERR_FAILED',
+        // Suprimir errores 503 del proxy
+        'api/proxy',
+        'Service Unavailable',
       ];
 
       // If it's an extension error, suppress it
@@ -73,10 +77,47 @@ export function ErrorSuppressor() {
     };
 
     // Also handle unhandled promise rejections from extensions and Base Account SDK
+    // Interceptar errores de fetch que devuelven 503
+    originalFetchRef.current = window.fetch;
+    window.fetch = async (...args) => {
+      try {
+        const response = await originalFetch(...args);
+        
+        // Si es un 503 del proxy, no registrar como error
+        if (response.status === 503) {
+          const url = args[0]?.toString() || '';
+          if (url.includes('/api/proxy/')) {
+            // Silenciosamente manejar el 503 sin registrar error
+            return response;
+          }
+        }
+        
+        return response;
+      } catch (error: any) {
+        // Suprimir errores de red relacionados con el proxy
+        const url = args[0]?.toString() || '';
+        if (url.includes('/api/proxy/')) {
+          // Crear una respuesta 503 simulada para que el código la maneje
+          return new Response(
+            JSON.stringify({
+              error: 'Backend not available',
+              message: 'El backend no está disponible.',
+            }),
+            {
+              status: 503,
+              statusText: 'Service Unavailable',
+              headers: { 'Content-Type': 'application/json' },
+            }
+          );
+        }
+        throw error;
+      }
+    };
+
     const handleUnhandledRejection = (event: PromiseRejectionEvent) => {
       const errorString = String(event.reason || '');
       
-      // Suppress errors from extensions, Base Account SDK COOP checks, and Workbox
+      // Suppress errors from extensions, Base Account SDK COOP checks, Workbox, and proxy 503 errors
       if (
         errorString.includes('has not been authorized yet') ||
         errorString.includes('content.js') ||
@@ -96,7 +137,9 @@ export function ErrorSuppressor() {
         errorString.includes('no-response') ||
         errorString.includes('The strategy could not generate a response') ||
         errorString.includes('Failed to fetch') ||
-        (errorString.includes('500') && errorString.includes('Internal Server Error'))
+        (errorString.includes('500') && errorString.includes('Internal Server Error')) ||
+        // Suprimir errores 503 del proxy
+        (errorString.includes('503') && (errorString.includes('api/proxy') || errorString.includes('Service Unavailable')))
       ) {
         event.preventDefault();
         // Silently suppress the error
@@ -108,6 +151,7 @@ export function ErrorSuppressor() {
     // Intercept global errors including network errors
     const handleError = (event: ErrorEvent) => {
       const errorString = String(event.error || event.message || '');
+      const targetString = String(event.target || '');
       
       // Suppress network errors and connection refused errors
       if (
@@ -118,7 +162,10 @@ export function ErrorSuppressor() {
         errorString.includes('net::ERR_FAILED') ||
         errorString.includes('localhost:4000') ||
         errorString.includes('localhost:8000') ||
-        (errorString.includes('500') && errorString.includes('Internal Server Error'))
+        (errorString.includes('500') && errorString.includes('Internal Server Error')) ||
+        // Suprimir errores 503 del proxy (backend no disponible)
+        (targetString.includes('api/proxy') && targetString.includes('503')) ||
+        errorString.includes('503') && (errorString.includes('api/proxy') || errorString.includes('Service Unavailable'))
       ) {
         event.preventDefault();
         event.stopPropagation();
@@ -146,7 +193,7 @@ export function ErrorSuppressor() {
     originalLogRef.current = window.console.log.bind(window.console);
     window.console.log = (...args: any[]) => {
       const logString = args.map(arg => String(arg)).join(' ');
-      // Suppress Base Account SDK COOP check logs and Workbox errors
+      // Suppress Base Account SDK COOP check logs, Workbox errors, and proxy 503 errors
       if (
         logString.includes('Cross-Origin-Opener-Policy') ||
         logString.includes('checkCrossOriginOpenerPolicy') ||
@@ -156,7 +203,9 @@ export function ErrorSuppressor() {
         logString.includes('ERR_FAILED') ||
         logString.includes('ERR_CONNECTION_REFUSED') ||
         logString.includes('net::ERR_CONNECTION_REFUSED') ||
-        (logString.includes('500') && logString.includes('Internal Server Error'))
+        (logString.includes('500') && logString.includes('Internal Server Error')) ||
+        // Suprimir logs de errores 503 del proxy
+        (logString.includes('503') && (logString.includes('api/proxy') || logString.includes('Service Unavailable')))
       ) {
         return; // Suppress this log
       }
@@ -176,6 +225,10 @@ export function ErrorSuppressor() {
       // Restore original console.log
       if (originalLogRef.current) {
         window.console.log = originalLogRef.current;
+      }
+      // Restore original fetch
+      if (originalFetchRef.current) {
+        window.fetch = originalFetchRef.current;
       }
       window.removeEventListener('unhandledrejection', handleUnhandledRejection);
       window.removeEventListener('error', handleError, true);
