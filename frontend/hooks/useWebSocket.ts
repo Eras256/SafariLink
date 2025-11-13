@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { io, Socket } from 'socket.io-client';
+import { getApiUrl } from '@/lib/api/config';
 
 interface UseWebSocketOptions {
   roomId?: string;
@@ -34,7 +35,7 @@ export function useWebSocket({ roomId, userId, token, enabled = true }: UseWebSo
   useEffect(() => {
     if (!enabled || !userId) return;
 
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
+    const apiUrl = getApiUrl();
     const newSocket = io(apiUrl, {
       auth: {
         token,

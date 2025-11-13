@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { getApiUrl } from '@/lib/api/config';
 
 interface Badge {
   id: string;
@@ -72,7 +73,7 @@ export function useGamification({
 
     try {
       setLoading(true);
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
+      const apiUrl = getApiUrl();
       const response = await fetch(
         `${apiUrl}/api/gamification/hackathon/${hackathonId}/badges`,
         {
@@ -101,7 +102,7 @@ export function useGamification({
 
     try {
       setLoading(true);
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
+      const apiUrl = getApiUrl();
       const response = await fetch(
         `${apiUrl}/api/gamification/hackathon/${hackathonId}/leaderboard?limit=100`
       );
@@ -124,7 +125,7 @@ export function useGamification({
 
     try {
       setLoading(true);
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
+      const apiUrl = getApiUrl();
       const response = await fetch(
         `${apiUrl}/api/gamification/hackathon/${hackathonId}/challenges`,
         {
@@ -153,7 +154,7 @@ export function useGamification({
 
     try {
       setLoading(true);
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
+      const apiUrl = getApiUrl();
       const response = await fetch(
         `${apiUrl}/api/gamification/hackathon/${hackathonId}/stats`,
         {
@@ -184,7 +185,7 @@ export function useGamification({
       }
 
       try {
-        const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
+        const apiUrl = getApiUrl();
         const response = await fetch(
           `${apiUrl}/api/gamification/hackathon/${hackathonId}/challenge/${challengeId}/complete`,
           {
@@ -228,7 +229,7 @@ export function useGamification({
     }
 
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
+      const apiUrl = getApiUrl();
       const response = await fetch(
         `${apiUrl}/api/gamification/hackathon/${hackathonId}/check-badges`,
         {

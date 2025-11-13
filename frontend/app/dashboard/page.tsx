@@ -95,10 +95,13 @@ function DashboardContentInner() {
       }
 
       try {
-        const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
+        // Usar el sistema embebido de configuración de API
+        const { getApiEndpoint } = await import('@/lib/api/config');
+        const { API_ENDPOINTS } = await import('@/lib/constants');
         
         // Fetch all hackathons and filter by organizer
-        const response = await fetch(`${apiUrl}/api/hackathons?limit=100`);
+        const endpoint = getApiEndpoint(`${API_ENDPOINTS.HACKATHONS.LIST}?limit=100`);
+        const response = await fetch(endpoint);
         
         if (response.ok) {
           const data = await response.json();

@@ -66,8 +66,9 @@ export default function GrantPage() {
       setLoading(true);
       try {
         // Try to fetch from API first
-        const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
-        const response = await fetch(`${apiUrl}/api/grants/project/${slug}`);
+        const { getApiEndpoint } = await import('@/lib/api/config');
+        const { API_ENDPOINTS } = await import('@/lib/constants');
+        const response = await fetch(getApiEndpoint(API_ENDPOINTS.GRANTS.PROJECT(slug)));
 
         if (response.ok) {
           const data = await response.json();

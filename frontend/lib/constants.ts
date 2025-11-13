@@ -59,6 +59,15 @@ export const API_ENDPOINTS = {
   GRANTS: {
     LIST: '/api/grants',
     DETAIL: (id: string) => `/api/grants/${id}`,
+    PROJECT: (slug: string) => `/api/grants/project/${slug}`,
+  },
+  DAO: {
+    LIST: '/api/dao/proposals',
+    PROPOSAL: (slug: string) => `/api/dao/proposals/${slug}`,
+  },
+  LEARN: {
+    LIST: '/api/lessons',
+    LESSON: (slug: string) => `/api/lessons/${slug}`,
   },
   ORGANIZER: {
     DASHBOARD: (id: string) => `/api/organizer/${id}/dashboard`,

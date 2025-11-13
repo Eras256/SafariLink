@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { getApiUrl } from '@/lib/api/config';
 import {
   Users,
   Video,
@@ -83,7 +84,7 @@ export function VirtualNetworking({ hackathonId, userId }: VirtualNetworkingProp
     const fetchRooms = async () => {
       // Try to fetch from API, but fallback to mock data if backend is unavailable
       // Use fallback data immediately if backend is likely unavailable
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
+      const apiUrl = getApiUrl();
       let controller: AbortController | null = null;
       let timeoutId: number | null = null;
       let fetchSucceeded = false;
@@ -228,7 +229,7 @@ export function VirtualNetworking({ hackathonId, userId }: VirtualNetworkingProp
   const handleJoinRoom = async (roomId: string) => {
     // Try to join via API, but fallback to local join if backend is unavailable
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
+      const apiUrl = getApiUrl();
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
 
@@ -279,7 +280,7 @@ export function VirtualNetworking({ hackathonId, userId }: VirtualNetworkingProp
     if (selectedRoom) {
       // Try to notify backend, but don't block if unavailable
       try {
-        const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
+        const apiUrl = getApiUrl();
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 3000); // 3 second timeout
 
@@ -368,7 +369,7 @@ export function VirtualNetworking({ hackathonId, userId }: VirtualNetworkingProp
     const maxParticipants = 10;
 
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
+      const apiUrl = getApiUrl();
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
 

@@ -1,5 +1,7 @@
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { io, Socket } from 'socket.io-client';
+import { getApiUrl, getApiEndpoint } from '@/lib/api/config';
+import { API_ENDPOINTS } from '@/lib/constants';
 
 interface DashboardMetrics {
   totalParticipants: number;
@@ -100,13 +102,14 @@ export function useDashboardMetrics({
     if (!hackathonId || !enabled) return;
 
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
-      const url = new URL(`${apiUrl}/api/organizer/${hackathonId}/dashboard`);
+      let url = getApiEndpoint(API_ENDPOINTS.ORGANIZER.DASHBOARD(hackathonId));
       if (walletAddress) {
-        url.searchParams.set('walletAddress', walletAddress);
+        const urlObj = new URL(url);
+        urlObj.searchParams.set('walletAddress', walletAddress);
+        url = urlObj.toString();
       }
 
-      const response = await fetch(url.toString(), {
+      const response = await fetch(url, {
         headers: {
           ...(token && { Authorization: `Bearer ${token}` }),
           ...(walletAddress && { 'X-Wallet-Address': walletAddress }),
@@ -152,7 +155,7 @@ export function useDashboardMetrics({
   useEffect(() => {
     if (!enabled || !hackathonId || (!userId && !walletAddress)) return;
 
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
+    const apiUrl = getApiUrl();
     const newSocket = io(apiUrl, {
       auth: {
         token,

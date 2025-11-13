@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useAccount } from 'wagmi';
+import { getApiUrl, getApiEndpoint } from '@/lib/api/config';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Users,
@@ -126,12 +127,11 @@ export function TeamMatching({ hackathonId, userId }: TeamMatchingProps) {
     githubUrl: '',
   });
 
-  const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
-
   // Initialize WebSocket connection
   useEffect(() => {
     if (!address) return;
 
+    const apiUrl = getApiUrl();
     const newSocket = io(apiUrl.replace('http', 'ws'), {
       auth: {
         token: address, // In production, use JWT token
@@ -166,6 +166,7 @@ export function TeamMatching({ hackathonId, userId }: TeamMatchingProps) {
   // Fetch profile
   const fetchProfile = async () => {
     try {
+      const apiUrl = getApiUrl();
       const response = await fetch(`${apiUrl}/api/team-matching/hackathons/${hackathonId}/profile`, {
         headers: {
           Authorization: `Bearer ${address}`, // In production, use JWT token
@@ -203,6 +204,7 @@ export function TeamMatching({ hackathonId, userId }: TeamMatchingProps) {
   // Fetch user matches
   const fetchUserMatches = async () => {
     try {
+      const apiUrl = getApiUrl();
       const response = await fetch(`${apiUrl}/api/team-matching/hackathons/${hackathonId}/my-matches`, {
         headers: {
           Authorization: `Bearer ${address}`,
@@ -222,6 +224,7 @@ export function TeamMatching({ hackathonId, userId }: TeamMatchingProps) {
   const findMatches = async () => {
     setSearching(true);
     try {
+      const apiUrl = getApiUrl();
       const response = await fetch(`${apiUrl}/api/team-matching/hackathons/${hackathonId}/matches?limit=10`, {
         headers: {
           Authorization: `Bearer ${address}`,
@@ -243,6 +246,7 @@ export function TeamMatching({ hackathonId, userId }: TeamMatchingProps) {
   // Save profile
   const saveProfile = async () => {
     try {
+      const apiUrl = getApiUrl();
       const method = profile ? 'PUT' : 'POST';
       const response = await fetch(`${apiUrl}/api/team-matching/hackathons/${hackathonId}/profile`, {
         method,
@@ -270,6 +274,7 @@ export function TeamMatching({ hackathonId, userId }: TeamMatchingProps) {
   // Respond to match
   const respondToMatch = async (matchId: string, action: 'INTERESTED' | 'NOT_INTERESTED') => {
     try {
+      const apiUrl = getApiUrl();
       const response = await fetch(`${apiUrl}/api/team-matching/matches/${matchId}/respond`, {
         method: 'POST',
         headers: {

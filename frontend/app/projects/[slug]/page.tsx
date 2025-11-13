@@ -69,8 +69,9 @@ export default function ProjectPage() {
       setLoading(true);
       try {
         // Try to fetch from API first
-        const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
-        const response = await fetch(`${apiUrl}/api/projects/${slug}`);
+        const { getApiEndpoint } = await import('@/lib/api/config');
+        const { API_ENDPOINTS } = await import('@/lib/constants');
+        const response = await fetch(getApiEndpoint(API_ENDPOINTS.PROJECTS.DETAIL(slug)));
 
         if (response.ok) {
           const data = await response.json();

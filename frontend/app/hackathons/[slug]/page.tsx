@@ -81,8 +81,9 @@ function HackathonContentInner({ slug }: { slug: string }) {
   const fetchProjects = async (hackathonId: string) => {
     setLoadingProjects(true);
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
-      const response = await fetch(`${apiUrl}/api/hackathons/${hackathonId}/projects`);
+      const { getApiEndpoint } = await import('@/lib/api/config');
+      const { API_ENDPOINTS } = await import('@/lib/constants');
+      const response = await fetch(getApiEndpoint(API_ENDPOINTS.HACKATHONS.PROJECTS(hackathonId)));
       
       if (response.ok) {
         const data = await response.json();
@@ -104,7 +105,8 @@ function HackathonContentInner({ slug }: { slug: string }) {
   useEffect(() => {
     const fetchHackathon = async () => {
       // Try to fetch from API, but fallback to mock data if backend is unavailable
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
+      const { getApiEndpoint } = await import('@/lib/api/config');
+      const { API_ENDPOINTS } = await import('@/lib/constants');
       let controller: AbortController | null = null;
       let timeoutId: number | null = null;
 
@@ -124,7 +126,7 @@ function HackathonContentInner({ slug }: { slug: string }) {
             : {};
 
           const response = await fetch(
-            `${apiUrl}/api/hackathons/${slug}`,
+            getApiEndpoint(API_ENDPOINTS.HACKATHONS.DETAIL(slug)),
             fetchOptions
           );
 
