@@ -4,7 +4,13 @@ import { arbitrumSepolia, baseSepolia, optimismSepolia } from 'wagmi/chains';
 import { injected, walletConnect } from 'wagmi/connectors';
 
 // Reown Cloud Project ID
-const projectId = process.env.NEXT_PUBLIC_REOWN_PROJECT_ID || '';
+// Limpiar el projectId de espacios y saltos de línea (común en Vercel)
+const cleanProjectId = (id: string | undefined): string => {
+  if (!id) return '';
+  return id.trim().replace(/\r\n/g, '').replace(/\n/g, '').replace(/\r/g, '');
+};
+
+const projectId = cleanProjectId(process.env.NEXT_PUBLIC_REOWN_PROJECT_ID) || '';
 
 const metadata = {
   name: 'SafariLink Platform',

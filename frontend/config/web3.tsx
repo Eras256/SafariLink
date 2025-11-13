@@ -4,9 +4,16 @@ import { arbitrumSepolia, baseSepolia, optimismSepolia } from 'wagmi/chains';
 
 // Get projectId from https://dashboard.reown.com
 // Fallback para desarrollo - usar variable de entorno en producción
-export const projectId = process.env.NEXT_PUBLIC_REOWN_PROJECT_ID || 
-  process.env.NEXT_PUBLIC_PROJECT_ID || 
-  'your_reown_project_id_here'; // Fallback para desarrollo
+// Limpiar el projectId de espacios y saltos de línea (común en Vercel)
+const cleanProjectId = (id: string | undefined): string => {
+  if (!id) return '';
+  return id.trim().replace(/\r\n/g, '').replace(/\n/g, '').replace(/\r/g, '');
+};
+
+export const projectId = cleanProjectId(
+  process.env.NEXT_PUBLIC_REOWN_PROJECT_ID || 
+  process.env.NEXT_PUBLIC_PROJECT_ID
+) || 'your_reown_project_id_here'; // Fallback para desarrollo
 
 if (!projectId) {
   console.warn('Project ID is not defined. Some wallet features may not work correctly.');

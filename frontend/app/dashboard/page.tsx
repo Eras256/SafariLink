@@ -133,6 +133,14 @@ function DashboardContentInner() {
             totalParticipants,
             totalProjects,
           });
+        } else if (response.status === 503) {
+          // Backend no disponible - silenciosamente usar stats vacíos
+          setStats({
+            totalHackathons: 0,
+            activeHackathons: 0,
+            totalParticipants: 0,
+            totalProjects: 0,
+          });
         } else {
           // Set empty stats if no hackathons found
           setStats({
@@ -142,8 +150,11 @@ function DashboardContentInner() {
             totalProjects: 0,
           });
         }
-      } catch (error) {
-        console.error('Error fetching hackathons:', error);
+      } catch (error: any) {
+        // Solo loggear errores que no sean 503 (backend no disponible)
+        if (!error.message?.includes('503') && !error.message?.includes('Service Unavailable')) {
+          console.error('Error fetching hackathons:', error);
+        }
         // Set empty stats on error
         setStats({
           totalHackathons: 0,
