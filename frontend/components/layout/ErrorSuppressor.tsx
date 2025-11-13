@@ -51,10 +51,18 @@ export function ErrorSuppressor() {
         'The strategy could not generate a response',
         'Failed to fetch',
         'net::ERR_FAILED',
-        // Suprimir errores 503 del proxy
-        'api/proxy',
-        'Service Unavailable',
       ];
+      
+      // Suprimir errores 503 del proxy (verificar antes de otros patrones)
+      if (
+        (errorString.includes('503') || errorString.includes('Service Unavailable')) && 
+        (errorString.includes('api/proxy') || 
+         errorString.includes('/api/proxy/') ||
+         errorString.includes('talent-protocol') ||
+         errorString.includes('hackathons'))
+      ) {
+        return true; // Suprimir este error
+      }
 
       // If it's an extension error, suppress it
       return extensionErrorPatterns.some(pattern => 
@@ -64,14 +72,30 @@ export function ErrorSuppressor() {
 
     // Override console.error to filter extension errors and proxy 503 errors
     window.console.error = (...args: any[]) => {
-      const errorString = args.map(arg => String(arg)).join(' ');
-      // Suprimir errores 503 del proxy primero
+      const errorString = args.map(arg => {
+        // Convertir objetos a string para buscar patrones
+        if (typeof arg === 'object' && arg !== null) {
+          try {
+            return JSON.stringify(arg);
+          } catch {
+            return String(arg);
+          }
+        }
+        return String(arg);
+      }).join(' ');
+      
+      // Suprimir errores 503 del proxy (múltiples patrones)
       if (
-        errorString.includes('503') && 
-        (errorString.includes('api/proxy') || errorString.includes('Service Unavailable') || errorString.includes('/api/proxy/'))
+        (errorString.includes('503') || errorString.includes('Service Unavailable')) && 
+        (errorString.includes('api/proxy') || 
+         errorString.includes('/api/proxy/') ||
+         errorString.includes('talent-protocol') ||
+         errorString.includes('hackathons') ||
+         errorString.includes('window.fetch'))
       ) {
         return; // No mostrar el error
       }
+      
       // Luego filtrar errores de extensiones
       if (!filterExtensionErrors(args) && originalErrorRef.current) {
         originalErrorRef.current(...args);
