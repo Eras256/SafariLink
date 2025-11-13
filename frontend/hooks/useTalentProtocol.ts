@@ -49,6 +49,29 @@ export function useTalentProtocol(addressOverride?: string): UseTalentProtocolRe
 
       clearTimeout(timeoutId);
 
+      // Parsear respuesta primero para verificar si es un error del proxy
+      let data;
+      try {
+        data = await response.json();
+      } catch {
+        // Si no se puede parsear, tratar como error
+        if (response.status === 404) {
+          setProfile(null);
+          setLoading(false);
+          setError(null);
+          return;
+        }
+        throw new Error(`Error ${response.status}: ${response.statusText}`);
+      }
+
+      // Verificar si es un error del proxy (backend no disponible)
+      if (data.error === 'Backend not available' || data.error === 'Backend not configured' || data.error === 'Proxy error') {
+        setError(null); // No mostrar error, simplemente no hay backend
+        setProfile(null);
+        setLoading(false);
+        return; // Salir silenciosamente
+      }
+
       if (response.status === 404) {
         setProfile(null);
         setLoading(false);
@@ -57,21 +80,32 @@ export function useTalentProtocol(addressOverride?: string): UseTalentProtocolRe
       }
 
       if (!response.ok) {
-        let errorMessage = 'Failed to fetch Talent Protocol profile';
-        try {
-          const errorData = await response.json();
-          errorMessage = errorData.error || errorMessage;
-        } catch {
-          errorMessage = `Error ${response.status}: ${response.statusText}`;
-        }
+        let errorMessage = data.message || data.error || 'Failed to fetch Talent Protocol profile';
         throw new Error(errorMessage);
       }
-
-      const data = await response.json();
+      
       setProfile(data.profile);
       setError(null); // Clear errors on success
     } catch (err: any) {
       console.error('Error fetching Talent Protocol profile:', err);
+      
+      // Intentar parsear el error si viene del proxy
+      let errorData;
+      try {
+        if (err.response) {
+          errorData = await err.response.json();
+        }
+      } catch {
+        // No se puede parsear
+      }
+      
+      // Si es un error del proxy indicando que no hay backend, no mostrar error
+      if (errorData?.error === 'Backend not available' || errorData?.error === 'Backend not configured') {
+        setError(null);
+        setProfile(null);
+        setLoading(false);
+        return;
+      }
       
       // Mejorar mensajes de error
       let errorMessage = err.message || 'Error al obtener el perfil de Talent Protocol';
@@ -80,8 +114,12 @@ export function useTalentProtocol(addressOverride?: string): UseTalentProtocolRe
         errorMessage = 'La solicitud tardó demasiado. Por favor intenta de nuevo.';
       } else if (err.message.includes('Failed to fetch') || err.message.includes('NetworkError') || err.message.includes('ERR_CONNECTION_REFUSED')) {
         // Verificar si es un error del proxy (backend no configurado)
-        if (err.message.includes('Backend not configured') || err.message.includes('503')) {
-          errorMessage = 'El backend no está configurado en producción. Esta funcionalidad requiere un backend desplegado.';
+        if (err.message.includes('Backend not configured') || err.message.includes('Backend not available') || err.message.includes('503')) {
+          // No mostrar error, simplemente no hay backend disponible
+          setError(null);
+          setProfile(null);
+          setLoading(false);
+          return;
         } else {
           errorMessage = 'No se pudo conectar con el servidor. Verifica que el backend esté corriendo.';
         }
@@ -124,19 +162,31 @@ export function useTalentProtocol(addressOverride?: string): UseTalentProtocolRe
 
       clearTimeout(timeoutId);
 
-      if (!response.ok) {
-        let errorMessage = 'Failed to sync Talent Protocol profile';
-        try {
-          const errorData = await response.json();
-          errorMessage = errorData.error || errorMessage;
-        } catch {
-          // Si no se puede parsear el JSON, usar el status
-          errorMessage = `Error ${response.status}: ${response.statusText}`;
+      // Parsear respuesta primero para verificar si es un error del proxy
+      let data;
+      try {
+        data = await response.json();
+      } catch {
+        // Si no se puede parsear, tratar como error
+        if (!response.ok) {
+          throw new Error(`Error ${response.status}: ${response.statusText}`);
         }
+        throw new Error('Invalid response from server');
+      }
+
+      // Verificar si es un error del proxy (backend no disponible)
+      if (data.error === 'Backend not available' || data.error === 'Backend not configured' || data.error === 'Proxy error') {
+        setError(null); // No mostrar error
+        setProfile(null);
+        setLoading(false);
+        return; // Salir silenciosamente
+      }
+
+      if (!response.ok) {
+        let errorMessage = data.message || data.error || 'Failed to sync Talent Protocol profile';
         throw new Error(errorMessage);
       }
 
-      const data = await response.json();
       console.log('Respuesta de sincronización:', data);
       
       // Use the profile returned from sync directly
@@ -154,6 +204,24 @@ export function useTalentProtocol(addressOverride?: string): UseTalentProtocolRe
     } catch (err: any) {
       console.error('Error syncing Talent Protocol profile:', err);
       
+      // Intentar parsear el error si viene del proxy
+      let errorData;
+      try {
+        if (err.response) {
+          errorData = await err.response.json();
+        }
+      } catch {
+        // No se puede parsear
+      }
+      
+      // Si es un error del proxy indicando que no hay backend, no mostrar error
+      if (errorData?.error === 'Backend not available' || errorData?.error === 'Backend not configured') {
+        setError(null);
+        setProfile(null);
+        setLoading(false);
+        return;
+      }
+      
       // Mejorar mensajes de error
       let errorMessage = 'Error al sincronizar el perfil de Talent Protocol';
       
@@ -161,8 +229,12 @@ export function useTalentProtocol(addressOverride?: string): UseTalentProtocolRe
         errorMessage = 'La sincronización tardó demasiado. Por favor intenta de nuevo.';
       } else if (err.message.includes('Failed to fetch') || err.message.includes('NetworkError') || err.message.includes('ERR_CONNECTION_REFUSED')) {
         // Verificar si es un error del proxy (backend no configurado)
-        if (err.message.includes('Backend not configured') || err.message.includes('503')) {
-          errorMessage = 'El backend no está configurado en producción. Esta funcionalidad requiere un backend desplegado.';
+        if (err.message.includes('Backend not configured') || err.message.includes('Backend not available') || err.message.includes('503')) {
+          // No mostrar error, simplemente no hay backend disponible
+          setError(null);
+          setProfile(null);
+          setLoading(false);
+          return;
         } else {
           errorMessage = 'No se pudo conectar con el servidor. Verifica que el backend esté corriendo.';
         }

@@ -129,34 +129,67 @@ async function handleRequest(
       }
     }
 
-    // Hacer la petición al backend
-    const response = await fetch(url.toString(), {
-      method,
-      headers,
-      body,
-    });
-
-    // Copiar respuesta
-    const data = await response.text();
-    let jsonData;
+    // Hacer la petición al backend con timeout
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 segundos
+    
     try {
-      jsonData = JSON.parse(data);
-    } catch {
-      jsonData = data;
-    }
+      const response = await fetch(url.toString(), {
+        method,
+        headers,
+        body,
+        signal: controller.signal,
+      });
 
-    return NextResponse.json(jsonData, {
-      status: response.status,
-      headers: {
-        'Access-Control-Allow-Origin': '*',
-        'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, PATCH, OPTIONS',
-        'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-      },
-    });
+      clearTimeout(timeoutId);
+
+      // Copiar respuesta
+      const data = await response.text();
+      let jsonData;
+      try {
+        jsonData = JSON.parse(data);
+      } catch {
+        jsonData = data;
+      }
+
+      return NextResponse.json(jsonData, {
+        status: response.status,
+        headers: {
+          'Access-Control-Allow-Origin': '*',
+          'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, PATCH, OPTIONS',
+          'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+        },
+      });
+    } catch (fetchError: any) {
+      clearTimeout(timeoutId);
+      
+      // Si es un error de conexión, el backend no está disponible
+      if (fetchError.name === 'AbortError' || fetchError.message?.includes('fetch failed') || fetchError.message?.includes('ECONNREFUSED')) {
+        return NextResponse.json(
+          { 
+            error: 'Backend not available',
+            message: 'El backend no está disponible. Esta funcionalidad requiere un backend desplegado y configurado.',
+            hint: 'Si no tienes backend desplegado, esta funcionalidad no estará disponible.'
+          },
+          { status: 503 }
+        );
+      }
+      throw fetchError;
+    }
   } catch (error: any) {
     console.error('Proxy error:', error);
+    
+    // Si ya es una respuesta JSON de error, retornarla
+    if (error.status && error.json) {
+      return error;
+    }
+    
     return NextResponse.json(
-      { error: 'Proxy error', message: error.message },
+      { 
+        error: 'Proxy error', 
+        message: 'Error al procesar la solicitud. El backend puede no estar disponible.',
+        details: process.env.NODE_ENV === 'development' ? error.message : undefined
+      },
       { status: 500 }
     );
   }

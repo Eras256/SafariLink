@@ -242,7 +242,7 @@ function DashboardContentInner() {
               </div>
             )}
 
-            {talentError && (
+            {talentError && !talentError.includes('Backend not') && !talentError.includes('Proxy error') && (
               <div className="mb-4 glassmorphic p-4 rounded-lg border border-red-500/30 bg-red-500/10">
                 <p className="text-red-400 text-sm font-semibold mb-2">
                   {talentError}
