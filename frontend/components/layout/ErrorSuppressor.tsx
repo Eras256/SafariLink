@@ -81,7 +81,7 @@ export function ErrorSuppressor() {
     originalFetchRef.current = window.fetch;
     window.fetch = async (...args) => {
       try {
-        const response = await originalFetch(...args);
+        const response = await originalFetchRef.current!(...args);
         
         // Si es un 503 del proxy, no registrar como error
         if (response.status === 503) {
