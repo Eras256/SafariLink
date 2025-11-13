@@ -79,7 +79,12 @@ export function useTalentProtocol(addressOverride?: string): UseTalentProtocolRe
       if (err.name === 'AbortError' || err.name === 'TimeoutError') {
         errorMessage = 'La solicitud tardó demasiado. Por favor intenta de nuevo.';
       } else if (err.message.includes('Failed to fetch') || err.message.includes('NetworkError') || err.message.includes('ERR_CONNECTION_REFUSED')) {
-        errorMessage = 'No se pudo conectar con el servidor. Verifica que el backend esté corriendo en ' + getApiUrl();
+        // Verificar si es un error del proxy (backend no configurado)
+        if (err.message.includes('Backend not configured') || err.message.includes('503')) {
+          errorMessage = 'El backend no está configurado en producción. Esta funcionalidad requiere un backend desplegado.';
+        } else {
+          errorMessage = 'No se pudo conectar con el servidor. Verifica que el backend esté corriendo.';
+        }
       }
       
       setError(errorMessage);
@@ -155,7 +160,12 @@ export function useTalentProtocol(addressOverride?: string): UseTalentProtocolRe
       if (err.name === 'AbortError' || err.name === 'TimeoutError') {
         errorMessage = 'La sincronización tardó demasiado. Por favor intenta de nuevo.';
       } else if (err.message.includes('Failed to fetch') || err.message.includes('NetworkError') || err.message.includes('ERR_CONNECTION_REFUSED')) {
-        errorMessage = 'No se pudo conectar con el servidor. Verifica que el backend esté corriendo en ' + getApiUrl();
+        // Verificar si es un error del proxy (backend no configurado)
+        if (err.message.includes('Backend not configured') || err.message.includes('503')) {
+          errorMessage = 'El backend no está configurado en producción. Esta funcionalidad requiere un backend desplegado.';
+        } else {
+          errorMessage = 'No se pudo conectar con el servidor. Verifica que el backend esté corriendo.';
+        }
       } else if (err.message) {
         errorMessage = err.message;
       }

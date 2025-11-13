@@ -9,7 +9,10 @@ const DEFAULT_AI_SERVICE_URL = 'http://localhost:8000';
 
 /**
  * Obtiene la URL base del backend API
- * Prioridad: variable de entorno > detección automática en producción > valor embebido
+ * Prioridad: variable de entorno > API proxy route > detección automática > valor embebido
+ * 
+ * En producción, usa el API route de Next.js como proxy para evitar problemas de CORS
+ * y no necesitar configurar URLs en el cliente
  */
 export function getApiUrl(): string {
   // Primero intentar variable de entorno (siempre tiene prioridad)
@@ -17,13 +20,16 @@ export function getApiUrl(): string {
     return process.env.NEXT_PUBLIC_API_URL;
   }
   
-  // Si estamos en el cliente y es producción, intentar detectar la URL
+  // En producción (cliente), usar el API route como proxy
+  // Esto evita problemas de CORS y no requiere configuración
   if (typeof window !== 'undefined') {
     const hostname = window.location.hostname;
-    // Si no es localhost, asumir que el backend está en subdominio api
+    
+    // Si no es localhost, usar el API route de Next.js como proxy
     if (hostname !== 'localhost' && hostname !== '127.0.0.1' && !hostname.includes('localhost')) {
-      // Intentar usar subdominio api (ej: api.vercel.app)
-      return `https://api.${hostname}`;
+      // Usar el mismo dominio pero con /api/proxy
+      // El proxy route manejará la conexión al backend real
+      return window.location.origin;
     }
   }
   
@@ -46,11 +52,24 @@ export function getAiServiceUrl(): string {
 /**
  * Construye una URL completa para un endpoint de API
  * Maneja paths que ya incluyen query parameters
+ * En producción, usa el proxy route de Next.js
  */
 export function getApiEndpoint(path: string): string {
   const baseUrl = getApiUrl();
   // Asegurar que el path comience con /
-  const normalizedPath = path.startsWith('/') ? path : `/${path}`;
+  let normalizedPath = path.startsWith('/') ? path : `/${path}`;
+  
+  // Si estamos usando el proxy (producción sin variable de entorno)
+  if (typeof window !== 'undefined' && baseUrl === window.location.origin) {
+    // El path ya incluye /api/talent-protocol/..., solo necesitamos agregar /api/proxy
+    // Remover el prefijo /api si existe porque el proxy lo maneja
+    if (normalizedPath.startsWith('/api/')) {
+      normalizedPath = normalizedPath.replace('/api', '');
+    }
+    return `${baseUrl}/api/proxy${normalizedPath}`;
+  }
+  
+  // Para desarrollo o cuando hay variable de entorno configurada
   // Remover /api duplicado si ya está en el path
   if (normalizedPath.startsWith('/api')) {
     return `${baseUrl}${normalizedPath}`;
