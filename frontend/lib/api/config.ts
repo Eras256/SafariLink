@@ -3,22 +3,32 @@
  * Similar al patrón usado en lib/web3/config.ts y lib/images/unsplashService.ts
  */
 
-// Valores embebidos por defecto (desarrollo local)
-const DEFAULT_API_URL = 'http://localhost:4000';
+// Valores embebidos por defecto
+const DEFAULT_API_URL_DEV = 'http://localhost:4000';
 const DEFAULT_AI_SERVICE_URL = 'http://localhost:8000';
 
 /**
  * Obtiene la URL base del backend API
- * Prioridad: variable de entorno > valor embebido
+ * Prioridad: variable de entorno > detección automática en producción > valor embebido
  */
 export function getApiUrl(): string {
-  if (typeof window === 'undefined') {
-    // Server-side: usar variable de entorno o valor por defecto
-    return process.env.NEXT_PUBLIC_API_URL || DEFAULT_API_URL;
+  // Primero intentar variable de entorno (siempre tiene prioridad)
+  if (process.env.NEXT_PUBLIC_API_URL) {
+    return process.env.NEXT_PUBLIC_API_URL;
   }
   
-  // Client-side: usar variable de entorno o valor embebido
-  return process.env.NEXT_PUBLIC_API_URL || DEFAULT_API_URL;
+  // Si estamos en el cliente y es producción, intentar detectar la URL
+  if (typeof window !== 'undefined') {
+    const hostname = window.location.hostname;
+    // Si no es localhost, asumir que el backend está en subdominio api
+    if (hostname !== 'localhost' && hostname !== '127.0.0.1' && !hostname.includes('localhost')) {
+      // Intentar usar subdominio api (ej: api.vercel.app)
+      return `https://api.${hostname}`;
+    }
+  }
+  
+  // Por defecto: localhost para desarrollo
+  return DEFAULT_API_URL_DEV;
 }
 
 /**
@@ -59,7 +69,7 @@ export function getAiEndpoint(path: string): string {
 
 // Exportar valores embebidos para referencia
 export const API_CONFIG = {
-  DEFAULT_API_URL,
+  DEFAULT_API_URL: DEFAULT_API_URL_DEV,
   DEFAULT_AI_SERVICE_URL,
   getApiUrl,
   getAiServiceUrl,
