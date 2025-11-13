@@ -19,6 +19,7 @@ import { motion } from 'framer-motion';
 import { Users, Calendar, MapPin, Trophy, Code, MessageSquare, Video, Award } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { OptimizedImage } from '@/components/ui/OptimizedImage';
+import { findMockHackathonBySlug } from '@/lib/mockHackathons';
 
 interface Hackathon {
   id: string;
@@ -176,27 +177,64 @@ function HackathonContentInner({ slug }: { slug: string }) {
       }
 
       // Fallback to mock data (works without backend)
-      const fallbackHackathon = {
-        id: '1',
-        slug: slug,
-        name: 'ETH Safari 2025',
-        tagline: 'Unleash Innovation. Empower Africa. Build the Future.',
-        description: 'Virtual hackathon for Web3 builders in Africa',
-        locationType: 'ONLINE' as 'IN_PERSON' | 'HYBRID' | 'ONLINE',
-        chains: ['arbitrum', 'base', 'optimism'],
-        totalPrizePool: 12500,
-        currency: 'USDC',
-        participantCount: 1247,
-        projectCount: 156,
-        status: 'ONGOING',
-        tags: ['Web3', 'DeFi', 'NFT', 'AI'],
-        organizerName: 'ETH Safari Team',
-        organizerWallet: '', // Will be set if available
-        eventStart: new Date().toISOString(),
-        eventEnd: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
-      };
-      setHackathon(fallbackHackathon);
-      setLoading(false);
+      // Try to find the hackathon by slug in mock data
+      const mockHackathon = findMockHackathonBySlug(slug);
+      
+      if (mockHackathon) {
+        // Convert MockHackathon to Hackathon format
+        const fallbackHackathon: Hackathon = {
+          id: mockHackathon.id,
+          slug: mockHackathon.slug,
+          name: mockHackathon.name,
+          tagline: mockHackathon.tagline,
+          description: mockHackathon.description,
+          bannerImage: mockHackathon.bannerImage,
+          logoImage: mockHackathon.logoImage,
+          organizerName: mockHackathon.organizerName,
+          organizerWallet: mockHackathon.organizerWallet,
+          eventStart: mockHackathon.eventStart,
+          eventEnd: mockHackathon.eventEnd,
+          locationType: mockHackathon.locationType,
+          location: mockHackathon.location,
+          chains: mockHackathon.chains,
+          totalPrizePool: mockHackathon.totalPrizePool,
+          currency: mockHackathon.currency,
+          participantCount: mockHackathon.participantCount,
+          projectCount: mockHackathon.projectCount,
+          status: mockHackathon.status,
+          tags: mockHackathon.tags,
+        };
+        setHackathon(fallbackHackathon);
+        setLoading(false);
+        
+        // Fetch projects for this hackathon
+        if (mockHackathon.id) {
+          fetchProjects(mockHackathon.id);
+        }
+      } else {
+        // If hackathon not found in mock data, use a generic fallback
+        const fallbackHackathon: Hackathon = {
+          id: '1',
+          slug: slug,
+          name: 'Hackathon',
+          tagline: 'Unleash Innovation. Empower Africa. Build the Future.',
+          description: 'Virtual hackathon for Web3 builders',
+          locationType: 'ONLINE' as 'IN_PERSON' | 'HYBRID' | 'ONLINE',
+          chains: ['arbitrum', 'base', 'optimism'],
+          totalPrizePool: 12500,
+          currency: 'USDC',
+          participantCount: 0,
+          projectCount: 0,
+          status: 'ONGOING',
+          tags: ['Web3', 'DeFi', 'NFT', 'AI'],
+          organizerName: 'Hackathon Team',
+          organizerWallet: '',
+          eventStart: new Date().toISOString(),
+          eventEnd: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+        };
+        setHackathon(fallbackHackathon);
+        setLoading(false);
+      }
     };
 
     if (slug) {
@@ -260,9 +298,9 @@ function HackathonContentInner({ slug }: { slug: string }) {
       <Navbar />
 
       {/* Hero Section */}
-      <section className="relative pt-32 pb-16 px-4">
+      <section className="relative pt-20 sm:pt-24 md:pt-32 pb-12 sm:pb-14 md:pb-16 px-3 sm:px-4 md:px-6">
         <div className="max-w-7xl mx-auto">
-          <div className="relative h-64 md:h-96 rounded-2xl overflow-hidden mb-8">
+          <div className="relative h-48 sm:h-56 md:h-64 lg:h-96 rounded-xl sm:rounded-2xl overflow-hidden mb-6 sm:mb-8">
             <OptimizedImage
               src={hackathon.bannerImage}
               alt={hackathon.name}
@@ -274,47 +312,47 @@ function HackathonContentInner({ slug }: { slug: string }) {
               contextData={{ name: hackathon.name, tagline: hackathon.tagline }}
             />
             <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/50 to-transparent" />
-            <div className="absolute bottom-8 left-8 right-8">
-              <h1 className="text-4xl md:text-6xl font-bold text-white mb-2">{hackathon.name}</h1>
+            <div className="absolute bottom-4 sm:bottom-6 md:bottom-8 left-4 sm:left-6 md:left-8 right-4 sm:right-6 md:right-8">
+              <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-bold text-white mb-1.5 sm:mb-2">{hackathon.name}</h1>
               {hackathon.tagline && (
-                <p className="text-xl text-white/80">{hackathon.tagline}</p>
+                <p className="text-base sm:text-lg md:text-xl text-white/80">{hackathon.tagline}</p>
               )}
             </div>
           </div>
 
           {/* Stats */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-            <div className="glassmorphic p-4 rounded-lg text-center">
-              <Users className="w-6 h-6 text-blue-400 mx-auto mb-2" />
-              <div className="text-2xl font-bold text-white">{hackathon.participantCount.toLocaleString()}</div>
-              <div className="text-white/60 text-sm">Participants</div>
+          <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6 sm:mb-8">
+            <div className="glassmorphic p-3 sm:p-4 rounded-lg text-center">
+              <Users className="w-5 h-5 sm:w-6 sm:h-6 text-blue-400 mx-auto mb-1.5 sm:mb-2" />
+              <div className="text-xl sm:text-2xl font-bold text-white">{hackathon.participantCount.toLocaleString()}</div>
+              <div className="text-white/60 text-xs sm:text-sm">Participants</div>
             </div>
-            <div className="glassmorphic p-4 rounded-lg text-center">
-              <Code className="w-6 h-6 text-purple-400 mx-auto mb-2" />
-              <div className="text-2xl font-bold text-white">{hackathon.projectCount}</div>
-              <div className="text-white/60 text-sm">Projects</div>
+            <div className="glassmorphic p-3 sm:p-4 rounded-lg text-center">
+              <Code className="w-5 h-5 sm:w-6 sm:h-6 text-purple-400 mx-auto mb-1.5 sm:mb-2" />
+              <div className="text-xl sm:text-2xl font-bold text-white">{hackathon.projectCount}</div>
+              <div className="text-white/60 text-xs sm:text-sm">Projects</div>
             </div>
-            <div className="glassmorphic p-4 rounded-lg text-center">
-              <Trophy className="w-6 h-6 text-yellow-400 mx-auto mb-2" />
-              <div className="text-2xl font-bold text-white">${hackathon.totalPrizePool.toLocaleString()}</div>
-              <div className="text-white/60 text-sm">Prize Pool</div>
+            <div className="glassmorphic p-3 sm:p-4 rounded-lg text-center">
+              <Trophy className="w-5 h-5 sm:w-6 sm:h-6 text-yellow-400 mx-auto mb-1.5 sm:mb-2" />
+              <div className="text-xl sm:text-2xl font-bold text-white">${hackathon.totalPrizePool.toLocaleString()}</div>
+              <div className="text-white/60 text-xs sm:text-sm">Prize Pool</div>
             </div>
-            <div className="glassmorphic p-4 rounded-lg text-center">
-              <MapPin className="w-6 h-6 text-green-400 mx-auto mb-2" />
-              <div className="text-2xl font-bold text-white">{hackathon.locationType}</div>
-              <div className="text-white/60 text-sm">Location</div>
+            <div className="glassmorphic p-3 sm:p-4 rounded-lg text-center">
+              <MapPin className="w-5 h-5 sm:w-6 sm:h-6 text-green-400 mx-auto mb-1.5 sm:mb-2" />
+              <div className="text-xl sm:text-2xl font-bold text-white">{hackathon.locationType}</div>
+              <div className="text-white/60 text-xs sm:text-sm">Location</div>
             </div>
           </div>
 
           {/* Tabs */}
-          <div className="flex items-center gap-2 mb-6 border-b border-white/10">
+          <div className="flex items-center gap-1 sm:gap-2 mb-4 sm:mb-6 border-b border-white/10 overflow-x-auto scrollbar-hide">
             {tabs.map((tab) => {
               const Icon = tab.icon;
               return (
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id as any)}
-                  className={`flex items-center gap-2 px-4 py-2 border-b-2 transition-colors ${
+                  className={`flex items-center gap-1 sm:gap-2 px-2 sm:px-3 md:px-4 py-1.5 sm:py-2 border-b-2 transition-colors whitespace-nowrap text-xs sm:text-sm ${
                     activeTab === tab.id
                       ? 'border-blue-500 text-blue-400'
                       : 'border-transparent text-white/60 hover:text-white'

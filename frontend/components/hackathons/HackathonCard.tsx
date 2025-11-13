@@ -101,9 +101,9 @@ export function HackathonCard({ hackathon, index }: HackathonCardProps) {
       transition={{ duration: 0.5, delay: index * 0.1 }}
     >
       <Link href={`/hackathons/${hackathon.slug}`}>
-        <div className="glassmorphic p-6 rounded-xl hover:scale-[1.02] transition-all duration-300 cursor-pointer h-full flex flex-col group">
+        <div className="glassmorphic p-4 sm:p-5 md:p-6 rounded-xl hover:scale-[1.02] transition-all duration-300 cursor-pointer h-full flex flex-col group">
           {/* Banner Image */}
-          <div className="relative w-full h-48 mb-4 rounded-lg overflow-hidden group/image">
+          <div className="relative w-full h-40 sm:h-44 md:h-48 mb-3 sm:mb-4 rounded-lg overflow-hidden group/image">
             <OptimizedImage
               src={hackathon.bannerImage}
               alt={hackathon.name}
@@ -121,70 +121,70 @@ export function HackathonCard({ hackathon, index }: HackathonCardProps) {
               }}
             />
             <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent pointer-events-none" />
-            <div className="absolute top-4 right-4 pointer-events-none">
-              <span className={`px-3 py-1 rounded-full text-xs font-medium border ${statusColor}`}>
+            <div className="absolute top-2 sm:top-3 md:top-4 right-2 sm:right-3 md:right-4 pointer-events-none">
+              <span className={`px-2 sm:px-3 py-0.5 sm:py-1 rounded-full text-xs font-medium border ${statusColor}`}>
                 {statusLabel}
               </span>
             </div>
           </div>
 
           {/* Header */}
-          <div className="mb-4">
-            <h3 className="text-2xl font-bold text-white mb-2 line-clamp-2 group-hover:text-purple-300 transition-colors">
+          <div className="mb-3 sm:mb-4">
+            <h3 className="text-lg sm:text-xl md:text-2xl font-bold text-white mb-1.5 sm:mb-2 line-clamp-2 group-hover:text-purple-300 transition-colors">
               {hackathon.name}
             </h3>
             {hackathon.tagline && (
-              <p className="text-sm text-white/70 line-clamp-1">{hackathon.tagline}</p>
+              <p className="text-xs sm:text-sm text-white/70 line-clamp-1">{hackathon.tagline}</p>
             )}
           </div>
 
           {/* Description */}
-          <p className="text-sm text-white/70 mb-4 line-clamp-3 flex-1">{hackathon.description}</p>
+          <p className="text-xs sm:text-sm text-white/70 mb-3 sm:mb-4 line-clamp-3 flex-1">{hackathon.description}</p>
 
           {/* Prize Pool */}
-          <div className="mb-4 p-4 bg-gradient-to-r from-yellow-500/10 to-orange-500/10 rounded-lg border border-yellow-500/20">
+          <div className="mb-3 sm:mb-4 p-3 sm:p-4 bg-gradient-to-r from-yellow-500/10 to-orange-500/10 rounded-lg border border-yellow-500/20">
             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Coins className="w-5 h-5 text-yellow-400" />
-                <span className="text-sm text-yellow-300">Total Prize Pool</span>
+              <div className="flex items-center gap-1.5 sm:gap-2">
+                <Coins className="w-4 h-4 sm:w-5 sm:h-5 text-yellow-400" />
+                <span className="text-xs sm:text-sm text-yellow-300">Total Prize Pool</span>
               </div>
-              <span className="text-2xl font-bold text-yellow-300">
+              <span className="text-xl sm:text-2xl font-bold text-yellow-300">
                 {formatPrize(hackathon.totalPrizePool)}
               </span>
             </div>
           </div>
 
           {/* Info Grid */}
-          <div className="grid grid-cols-2 gap-3 mb-4">
-            <div className="flex items-center gap-2 text-sm text-white/70">
-              <LocationIcon className="w-4 h-4 text-white/50" />
-              <span>{locationLabel}</span>
+          <div className="grid grid-cols-2 gap-2 sm:gap-3 mb-3 sm:mb-4">
+            <div className="flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm text-white/70">
+              <LocationIcon className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-white/50 flex-shrink-0" />
+              <span className="truncate">{locationLabel}</span>
             </div>
-            <div className="flex items-center gap-2 text-sm text-white/70">
-              <Calendar className="w-4 h-4 text-white/50" />
-              <span>{formatDate(hackathon.eventStart)}</span>
+            <div className="flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm text-white/70">
+              <Calendar className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-white/50 flex-shrink-0" />
+              <span className="truncate">{formatDate(hackathon.eventStart)}</span>
             </div>
-            <div className="flex items-center gap-2 text-sm text-white/70">
-              <Users className="w-4 h-4 text-white/50" />
-              <span>
+            <div className="flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm text-white/70">
+              <Users className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-white/50 flex-shrink-0" />
+              <span className="truncate">
                 {hackathon.participantCount}
                 {hackathon.maxParticipants ? ` / ${hackathon.maxParticipants}` : ''} participants
               </span>
             </div>
-            <div className="flex items-center gap-2 text-sm text-white/70">
-              <Trophy className="w-4 h-4 text-white/50" />
-              <span>{hackathon.projectCount} projects</span>
+            <div className="flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm text-white/70">
+              <Trophy className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-white/50 flex-shrink-0" />
+              <span className="truncate">{hackathon.projectCount} projects</span>
             </div>
           </div>
 
           {/* Chains */}
           {hackathon.chains && hackathon.chains.length > 0 && (
-            <div className="mb-4">
-              <div className="flex flex-wrap gap-2">
+            <div className="mb-3 sm:mb-4">
+              <div className="flex flex-wrap gap-1.5 sm:gap-2">
                 {hackathon.chains.map((chain, idx) => (
                   <span
                     key={idx}
-                    className="px-2 py-1 bg-white/5 rounded-md text-xs text-white/70 border border-white/10 capitalize"
+                    className="px-1.5 sm:px-2 py-0.5 sm:py-1 bg-white/5 rounded-md text-xs text-white/70 border border-white/10 capitalize"
                   >
                     {chain}
                   </span>
@@ -195,18 +195,18 @@ export function HackathonCard({ hackathon, index }: HackathonCardProps) {
 
           {/* Tags */}
           {hackathon.tags && hackathon.tags.length > 0 && (
-            <div className="mb-4">
-              <div className="flex flex-wrap gap-2">
+            <div className="mb-3 sm:mb-4">
+              <div className="flex flex-wrap gap-1.5 sm:gap-2">
                 {hackathon.tags.slice(0, 3).map((tag, idx) => (
                   <span
                     key={idx}
-                    className="px-2 py-1 bg-purple-500/10 rounded-md text-xs text-purple-300 border border-purple-500/20"
+                    className="px-1.5 sm:px-2 py-0.5 sm:py-1 bg-purple-500/10 rounded-md text-xs text-purple-300 border border-purple-500/20"
                   >
                     {tag}
                   </span>
                 ))}
                 {hackathon.tags.length > 3 && (
-                  <span className="px-2 py-1 bg-white/5 rounded-md text-xs text-white/70 border border-white/10">
+                  <span className="px-1.5 sm:px-2 py-0.5 sm:py-1 bg-white/5 rounded-md text-xs text-white/70 border border-white/10">
                     +{hackathon.tags.length - 3}
                   </span>
                 )}
@@ -215,13 +215,13 @@ export function HackathonCard({ hackathon, index }: HackathonCardProps) {
           )}
 
           {/* Footer */}
-          <div className="flex items-center justify-between pt-4 border-t border-white/10">
-            <div className="flex items-center gap-2">
-              <span className="text-xs text-white/60">{hackathon.organizerName}</span>
+          <div className="flex items-center justify-between pt-3 sm:pt-4 border-t border-white/10">
+            <div className="flex items-center gap-1.5 sm:gap-2 min-w-0">
+              <span className="text-xs text-white/60 truncate">{hackathon.organizerName}</span>
             </div>
-            <div className="flex items-center gap-2 text-xs text-white/40">
+            <div className="flex items-center gap-1.5 sm:gap-2 text-xs text-white/40 flex-shrink-0">
               <Clock className="w-3 h-3" />
-              <span>{getStatusText()}</span>
+              <span className="hidden sm:inline">{getStatusText()}</span>
             </div>
           </div>
         </div>

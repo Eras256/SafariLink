@@ -1,11 +1,36 @@
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
-from typing import List, Optional
-import google.generativeai as genai
+from typing import List, Optional, Dict, Any
 import os
+import logging
 
-app = FastAPI()
+# Configurar logging
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
+logger = logging.getLogger(__name__)
+
+# Importar helper avanzado de Gemini
+try:
+    from lib.gemini_advanced import get_gemini_client, GeminiConfig
+    gemini_client = None
+    try:
+        gemini_client = get_gemini_client()
+        logger.info("Cliente Gemini inicializado correctamente")
+    except Exception as e:
+        logger.error(f"Error inicializando cliente Gemini: {e}")
+        gemini_client = None
+except ImportError as e:
+    logger.error(f"Error importando helper de Gemini: {e}")
+    gemini_client = None
+
+app = FastAPI(
+    title="SafariLink AI Mentor Bot",
+    description="AI Mentor assistant powered by Google Gemini",
+    version="2.0.0"
+)
 
 # Configure CORS to allow requests from frontend
 app.add_middleware(
@@ -15,6 +40,7 @@ app.add_middleware(
         "http://localhost:3001",
         "http://127.0.0.1:3000",
         "http://127.0.0.1:3001",
+        "*",  # En producción, especificar dominios exactos
     ],  # Allow frontend origins
     allow_credentials=True,
     allow_methods=["*"],  # Allow all methods
@@ -32,20 +58,13 @@ class MentorResponse(BaseModel):
     suggestedResources: List[dict]
     relatedQuestions: List[str]
     language: str
+    modelUsed: Optional[str] = None  # Modelo usado para la respuesta
 
-# Initialize Gemini client
-gemini_api_key = os.getenv("GEMINI_API_KEY", "AIzaSyDR2ONyr0hBBD0zZO9llpwwSGiIidlamxU")
-try:
-    genai.configure(api_key=gemini_api_key)
-    # Use gemini-2.0-flash (latest stable) or fallback to gemini-flash-latest
-    try:
-        model = genai.GenerativeModel("gemini-2.0-flash")
-    except Exception:
-        # Fallback to latest flash model
-        model = genai.GenerativeModel("gemini-flash-latest")
-except Exception as e:
-    print(f"Error initializing Gemini: {e}")
-    model = None
+class TestGeminiResponse(BaseModel):
+    success: bool
+    message: str
+    modelUsed: Optional[str] = None
+    error: Optional[str] = None
 
 def get_system_prompt(language: str = "en") -> str:
     """Get system prompt in the specified language"""
@@ -163,43 +182,54 @@ async def ask_mentor(request: MentorRequest):
             if conversation_text:
                 full_prompt = f"{system_prompt}\n\nConversation History:\n{conversation_text}\n\nCurrent Question:\n{question_with_lang}{context_str}"
         
-        # Call Gemini
-        if model is None:
-            raise HTTPException(status_code=500, detail="Gemini model not initialized. Check API key.")
-        
-        try:
-            response = model.generate_content(
-                full_prompt,
-                generation_config={
-                    "max_output_tokens": 1500,
-                    "temperature": 0.7,
-                }
+        # Call Gemini usando el helper avanzado
+        if gemini_client is None:
+            raise HTTPException(
+                status_code=500,
+                detail="Gemini client not initialized. Check GEMINI_API_KEY environment variable."
             )
-            
-            # Extract answer from response - Gemini API structure
-            # In google-generativeai, response.text is the direct way to get text
-            if hasattr(response, 'text') and response.text:
-                answer = response.text
-            elif hasattr(response, 'parts') and response.parts and len(response.parts) > 0:
-                answer = response.parts[0].text
-            elif hasattr(response, 'candidates') and response.candidates and len(response.candidates) > 0:
-                candidate = response.candidates[0]
-                if hasattr(candidate, 'content') and hasattr(candidate.content, 'parts'):
-                    if candidate.content.parts and len(candidate.content.parts) > 0:
-                        answer = candidate.content.parts[0].text
-                    else:
-                        answer = str(candidate.content)
-                else:
-                    answer = str(candidate)
-            else:
-                # Fallback: try to get text from any available attribute
-                answer = str(response) if response else "No response from Gemini API"
-        except Exception as e:
-            import traceback
-            error_msg = str(e)
-            error_trace = traceback.format_exc()
-            print(f"Gemini API Error: {error_msg}\n{error_trace}")
-            raise HTTPException(status_code=500, detail=f"Error calling Gemini API: {error_msg}")
+        
+        # Configurar generación con parámetros optimizados
+        config = GeminiConfig(
+            temperature=0.7,
+            top_p=0.9,
+            top_k=40,
+            max_output_tokens=1500
+        )
+        
+        # Preparar historial de conversación para Gemini
+        # Nota: Por ahora, el historial se incluye en el prompt completo
+        # para mayor compatibilidad. El helper manejará el formato si se pasa.
+        conversation_history = None
+        # El historial ya está incluido en full_prompt, así que no lo pasamos por separado
+        # para evitar problemas de formato. Esto se puede mejorar en el futuro.
+        
+        # Generar respuesta usando el helper
+        result = gemini_client.generate_content(
+            prompt=full_prompt,
+            config=config,
+            extract_json=False,
+            conversation_history=conversation_history
+        )
+        
+        if not result.get("success"):
+            error_msg = result.get("error", "Error desconocido al generar respuesta")
+            logger.error(f"Error generando respuesta: {error_msg}")
+            raise HTTPException(
+                status_code=500,
+                detail=f"Error calling Gemini API: {error_msg}"
+            )
+        
+        answer = result.get("data", "")
+        model_used = result.get("model_used")
+        
+        if not answer:
+            raise HTTPException(
+                status_code=500,
+                detail="Respuesta vacía del modelo Gemini"
+            )
+        
+        logger.info(f"Respuesta generada exitosamente usando modelo: {model_used}")
         
         # Generate suggested resources based on question
         resources = generate_resources(request.question, request.context)
@@ -211,7 +241,8 @@ async def ask_mentor(request: MentorRequest):
             answer=answer,
             suggestedResources=resources,
             relatedQuestions=related,
-            language=language
+            language=language,
+            modelUsed=model_used
         )
         
     except Exception as e:
@@ -391,7 +422,51 @@ def generate_related_questions(question: str, language: str = "en") -> List[str]
 
 @app.get("/health")
 async def health():
-    return {"status": "healthy", "service": "mentor-bot"}
+    """Health check endpoint"""
+    return {
+        "status": "healthy",
+        "service": "mentor-bot",
+        "gemini_configured": gemini_client is not None
+    }
+
+@app.get("/test-gemini", response_model=TestGeminiResponse)
+async def test_gemini():
+    """
+    Endpoint de prueba para validar la conectividad con Gemini AI
+    Retorna información sobre el estado de la conexión y el modelo usado
+    """
+    if gemini_client is None:
+        return TestGeminiResponse(
+            success=False,
+            message="Cliente Gemini no inicializado",
+            error="GEMINI_API_KEY no está configurada o es inválida"
+        )
+    
+    try:
+        result = gemini_client.test_connection()
+        
+        if result.get("success"):
+            return TestGeminiResponse(
+                success=True,
+                message="Conexión con Gemini AI exitosa",
+                modelUsed=result.get("model_used"),
+                error=None
+            )
+        else:
+            return TestGeminiResponse(
+                success=False,
+                message="Error al conectar con Gemini AI",
+                modelUsed=None,
+                error=result.get("error", "Error desconocido")
+            )
+    except Exception as e:
+        logger.error(f"Error en test de Gemini: {e}")
+        return TestGeminiResponse(
+            success=False,
+            message="Error al probar conexión con Gemini",
+            modelUsed=None,
+            error=str(e)
+        )
 
 # Railway compatibility: leer PORT desde variable de entorno
 if __name__ == "__main__":

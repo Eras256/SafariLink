@@ -64,20 +64,22 @@ function WalletConnectInner() {
   // Show loading state until mounted and AppKit ready
   if (!mounted || !appKitReady) {
     return (
-      <Button disabled className="glassmorphic-button">
-        Loading...
+      <Button disabled className="glassmorphic-button text-xs sm:text-sm px-3 sm:px-4">
+        <span className="hidden sm:inline">Loading...</span>
+        <span className="sm:hidden">...</span>
       </Button>
     );
   }
 
   if (isConnected && address) {
     return (
-      <div className="flex items-center gap-2">
-        <div className="glassmorphic px-3 py-1.5 rounded-full text-sm text-white">
+      <div className="flex items-center gap-1.5 sm:gap-2">
+        <div className="glassmorphic px-2 sm:px-3 py-1 sm:py-1.5 rounded-full text-xs sm:text-sm text-white">
           {truncateAddress(address)}
         </div>
-        <Button variant="ghost" size="sm" onClick={() => disconnect()}>
-          Disconnect
+        <Button variant="ghost" size="sm" onClick={() => disconnect()} className="text-xs sm:text-sm">
+          <span className="hidden sm:inline">Disconnect</span>
+          <span className="sm:hidden">DC</span>
         </Button>
       </div>
     );
@@ -86,10 +88,11 @@ function WalletConnectInner() {
   return (
     <Button 
       onClick={handleConnect} 
-      className="glassmorphic-button"
+      className="glassmorphic-button text-xs sm:text-sm px-3 sm:px-4"
       disabled={!appKitReady}
     >
-      Connect Wallet
+      <span className="hidden sm:inline">Connect Wallet</span>
+      <span className="sm:hidden">Connect</span>
     </Button>
   );
 }
@@ -117,8 +120,9 @@ export function WalletConnect() {
   // En el servidor o antes del mount, mostrar estado de carga
   if (!mounted || !providerReady) {
     return (
-      <Button disabled className="glassmorphic-button">
-        Loading...
+      <Button disabled className="glassmorphic-button text-xs sm:text-sm px-3 sm:px-4">
+        <span className="hidden sm:inline">Loading...</span>
+        <span className="sm:hidden">...</span>
       </Button>
     );
   }

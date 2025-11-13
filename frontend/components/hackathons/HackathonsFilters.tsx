@@ -77,17 +77,17 @@ export function HackathonsFilters({ filters, onFiltersChange }: HackathonsFilter
     filters.sortBy !== 'newest';
 
   return (
-    <section className="px-4 py-8">
-      <div className="max-w-7xl mx-auto space-y-4">
+    <section className="px-3 sm:px-4 md:px-6 py-6 sm:py-8">
+      <div className="max-w-7xl mx-auto space-y-3 sm:space-y-4">
         {/* Search Bar */}
         <div className="relative">
-          <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-white/40" />
+          <Search className="absolute left-3 sm:left-4 top-1/2 transform -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 text-white/40" />
           <input
             type="text"
-            placeholder="Search hackathons by name, tagline, or tags..."
+            placeholder="Search hackathons..."
             value={filters.search}
             onChange={(e) => updateFilter('search', e.target.value)}
-            className="w-full pl-12 pr-4 py-3 glassmorphic rounded-xl text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-purple-500/50 transition-all"
+            className="w-full pl-10 sm:pl-12 pr-3 sm:pr-4 py-2.5 sm:py-3 glassmorphic rounded-xl text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-purple-500/50 transition-all text-sm sm:text-base"
           />
         </div>
 
@@ -123,15 +123,15 @@ export function HackathonsFilters({ filters, onFiltersChange }: HackathonsFilter
 
         {/* Filters Panel */}
         {showFilters && (
-          <div className="glassmorphic p-6 rounded-xl space-y-4 animate-in fade-in slide-in-from-top-2">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="glassmorphic p-4 sm:p-5 md:p-6 rounded-xl space-y-3 sm:space-y-4 animate-in fade-in slide-in-from-top-2">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
               {/* Status Filter */}
               <div>
-                <label className="block text-sm font-medium text-white/80 mb-2">Status</label>
+                <label className="block text-xs sm:text-sm font-medium text-white/80 mb-1.5 sm:mb-2">Status</label>
                 <select
                   value={filters.status}
                   onChange={(e) => updateFilter('status', e.target.value)}
-                  className="w-full px-4 py-2 glassmorphic rounded-lg text-white bg-transparent border border-white/10 focus:outline-none focus:ring-2 focus:ring-purple-500/50"
+                  className="w-full px-3 sm:px-4 py-2 glassmorphic rounded-lg text-white bg-transparent border border-white/10 focus:outline-none focus:ring-2 focus:ring-purple-500/50 text-sm sm:text-base"
                 >
                   {STATUS_OPTIONS.map((option) => (
                     <option key={option.value} value={option.value} className="bg-gray-900">
@@ -143,11 +143,11 @@ export function HackathonsFilters({ filters, onFiltersChange }: HackathonsFilter
 
               {/* Location Type Filter */}
               <div>
-                <label className="block text-sm font-medium text-white/80 mb-2">Location</label>
+                <label className="block text-xs sm:text-sm font-medium text-white/80 mb-1.5 sm:mb-2">Location</label>
                 <select
                   value={filters.locationType}
                   onChange={(e) => updateFilter('locationType', e.target.value)}
-                  className="w-full px-4 py-2 glassmorphic rounded-lg text-white bg-transparent border border-white/10 focus:outline-none focus:ring-2 focus:ring-purple-500/50"
+                  className="w-full px-3 sm:px-4 py-2 glassmorphic rounded-lg text-white bg-transparent border border-white/10 focus:outline-none focus:ring-2 focus:ring-purple-500/50 text-sm sm:text-base"
                 >
                   {LOCATION_OPTIONS.map((option) => (
                     <option key={option.value} value={option.value} className="bg-gray-900">
@@ -159,11 +159,11 @@ export function HackathonsFilters({ filters, onFiltersChange }: HackathonsFilter
 
               {/* Chain Filter */}
               <div>
-                <label className="block text-sm font-medium text-white/80 mb-2">Blockchain</label>
+                <label className="block text-xs sm:text-sm font-medium text-white/80 mb-1.5 sm:mb-2">Blockchain</label>
                 <select
                   value={filters.chain}
                   onChange={(e) => updateFilter('chain', e.target.value)}
-                  className="w-full px-4 py-2 glassmorphic rounded-lg text-white bg-transparent border border-white/10 focus:outline-none focus:ring-2 focus:ring-purple-500/50"
+                  className="w-full px-3 sm:px-4 py-2 glassmorphic rounded-lg text-white bg-transparent border border-white/10 focus:outline-none focus:ring-2 focus:ring-purple-500/50 text-sm sm:text-base"
                 >
                   {CHAIN_OPTIONS.map((option) => (
                     <option key={option.value} value={option.value} className="bg-gray-900">
@@ -175,11 +175,11 @@ export function HackathonsFilters({ filters, onFiltersChange }: HackathonsFilter
 
               {/* Sort By */}
               <div>
-                <label className="block text-sm font-medium text-white/80 mb-2">Sort By</label>
+                <label className="block text-xs sm:text-sm font-medium text-white/80 mb-1.5 sm:mb-2">Sort By</label>
                 <select
                   value={filters.sortBy}
                   onChange={(e) => updateFilter('sortBy', e.target.value)}
-                  className="w-full px-4 py-2 glassmorphic rounded-lg text-white bg-transparent border border-white/10 focus:outline-none focus:ring-2 focus:ring-purple-500/50"
+                  className="w-full px-3 sm:px-4 py-2 glassmorphic rounded-lg text-white bg-transparent border border-white/10 focus:outline-none focus:ring-2 focus:ring-purple-500/50 text-sm sm:text-base"
                 >
                   {SORT_OPTIONS.map((option) => (
                     <option key={option.value} value={option.value} className="bg-gray-900">
@@ -194,9 +194,9 @@ export function HackathonsFilters({ filters, onFiltersChange }: HackathonsFilter
 
         {/* Active Filters Display */}
         {hasActiveFilters && (
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap gap-1.5 sm:gap-2">
             {filters.status && (
-              <span className="px-3 py-1 glassmorphic rounded-full text-sm text-white/80 flex items-center gap-2">
+              <span className="px-2 sm:px-3 py-1 glassmorphic rounded-full text-xs sm:text-sm text-white/80 flex items-center gap-1.5 sm:gap-2">
                 Status: {STATUS_OPTIONS.find((s) => s.value === filters.status)?.label}
                 <button
                   onClick={() => updateFilter('status', '')}

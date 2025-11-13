@@ -117,7 +117,10 @@ export function AIMentor({ hackathonId, userId, context }: AIMentorProps) {
     setIsLoading(true);
 
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_AI_SERVICE_URL || 'http://localhost:8000';
+      // Usar endpoint local de Next.js en producción, o servicio externo en desarrollo
+      const apiUrl = process.env.NEXT_PUBLIC_AI_SERVICE_URL && process.env.NEXT_PUBLIC_AI_SERVICE_URL !== 'http://localhost:8000'
+        ? process.env.NEXT_PUBLIC_AI_SERVICE_URL
+        : '/api'; // Usar endpoint local de Next.js
       const controller = new AbortController();
       const timeoutId = window.setTimeout(() => controller.abort(), 30000); // 30 second timeout
 

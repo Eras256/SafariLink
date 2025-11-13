@@ -26,10 +26,11 @@ function ChainSwitcherContent() {
         variant="outline"
         size="sm"
         onClick={() => setIsOpen(!isOpen)}
-        className="glassmorphic"
+        className="glassmorphic text-xs sm:text-sm px-2 sm:px-3"
       >
-        {chain?.name ?? 'Select Chain'}
-        <ChevronDown className="ml-2 h-4 w-4" />
+        <span className="hidden sm:inline">{chain?.name ?? 'Select Chain'}</span>
+        <span className="sm:hidden">{chain?.name?.split(' ')[0] ?? 'Chain'}</span>
+        <ChevronDown className="ml-1 sm:ml-2 h-3 w-3 sm:h-4 sm:w-4" />
       </Button>
 
       {isOpen && (
@@ -38,7 +39,7 @@ function ChainSwitcherContent() {
             className="fixed inset-0 z-10"
             onClick={() => setIsOpen(false)}
           />
-          <div className="absolute top-full mt-2 right-0 z-20 glassmorphic p-2 min-w-[200px]">
+          <div className="absolute top-full mt-2 right-0 z-20 glassmorphic p-2 min-w-[160px] sm:min-w-[200px]">
             {chains.map((c) => (
               <button
                 key={c.id}
@@ -46,7 +47,7 @@ function ChainSwitcherContent() {
                   switchChain({ chainId: c.id });
                   setIsOpen(false);
                 }}
-                className="w-full text-left px-4 py-2 rounded-lg hover:bg-white/5 transition text-white/80 hover:text-white text-sm"
+                className="w-full text-left px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg hover:bg-white/5 transition text-white/80 hover:text-white text-xs sm:text-sm"
               >
                 {c.name}
               </button>
@@ -82,8 +83,9 @@ export function ChainSwitcher() {
   // Show loading state until mounted and provider is ready (client-side only)
   if (!mounted || !providerReady) {
     return (
-      <Button variant="outline" size="sm" className="glassmorphic" disabled>
-        Select Chain
+      <Button variant="outline" size="sm" className="glassmorphic text-xs sm:text-sm px-2 sm:px-3" disabled>
+        <span className="hidden sm:inline">Select Chain</span>
+        <span className="sm:hidden">Chain</span>
       </Button>
     );
   }

@@ -4,6 +4,7 @@ import { headers } from 'next/headers';
 import './globals.css';
 import { Providers } from './providers';
 import { ErrorSuppressor } from '@/components/layout/ErrorSuppressor';
+import { ChatBotProvider } from '@/components/chat/ChatBotProvider';
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });
 
@@ -51,7 +52,10 @@ export default async function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <body className={inter.variable}>
         <ErrorSuppressor />
-        <Providers cookies={cookies}>{children}</Providers>
+        <Providers cookies={cookies}>
+          {children}
+          <ChatBotProvider />
+        </Providers>
       </body>
     </html>
   );
