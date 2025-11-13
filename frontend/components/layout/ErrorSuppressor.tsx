@@ -90,20 +90,6 @@ export function ErrorSuppressor() {
     // IMPORTANTE: Usar .bind(window) para preservar el contexto y evitar "Illegal invocation"
     originalFetchRef.current = window.fetch.bind(window);
     
-    // Interceptar console.error para suprimir errores 503 del proxy
-    const originalConsoleError = window.console.error.bind(window.console);
-    window.console.error = (...args: any[]) => {
-      const errorString = args.map(arg => String(arg)).join(' ');
-      // Suprimir errores 503 del proxy
-      if (
-        errorString.includes('503') && 
-        (errorString.includes('api/proxy') || errorString.includes('Service Unavailable') || errorString.includes('/api/proxy/'))
-      ) {
-        return; // No mostrar el error
-      }
-      originalConsoleError(...args);
-    };
-    
     window.fetch = async (...args) => {
       try {
         // Llamar al fetch original con el contexto correcto
