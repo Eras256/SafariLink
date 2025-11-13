@@ -62,8 +62,17 @@ export function ErrorSuppressor() {
       );
     };
 
-    // Override console.error to filter extension errors
+    // Override console.error to filter extension errors and proxy 503 errors
     window.console.error = (...args: any[]) => {
+      const errorString = args.map(arg => String(arg)).join(' ');
+      // Suprimir errores 503 del proxy primero
+      if (
+        errorString.includes('503') && 
+        (errorString.includes('api/proxy') || errorString.includes('Service Unavailable') || errorString.includes('/api/proxy/'))
+      ) {
+        return; // No mostrar el error
+      }
+      // Luego filtrar errores de extensiones
       if (!filterExtensionErrors(args) && originalErrorRef.current) {
         originalErrorRef.current(...args);
       }
@@ -80,6 +89,21 @@ export function ErrorSuppressor() {
     // Interceptar errores de fetch que devuelven 503
     // IMPORTANTE: Usar .bind(window) para preservar el contexto y evitar "Illegal invocation"
     originalFetchRef.current = window.fetch.bind(window);
+    
+    // Interceptar console.error para suprimir errores 503 del proxy
+    const originalConsoleError = window.console.error.bind(window.console);
+    window.console.error = (...args: any[]) => {
+      const errorString = args.map(arg => String(arg)).join(' ');
+      // Suprimir errores 503 del proxy
+      if (
+        errorString.includes('503') && 
+        (errorString.includes('api/proxy') || errorString.includes('Service Unavailable') || errorString.includes('/api/proxy/'))
+      ) {
+        return; // No mostrar el error
+      }
+      originalConsoleError(...args);
+    };
+    
     window.fetch = async (...args) => {
       try {
         // Llamar al fetch original con el contexto correcto
@@ -90,6 +114,7 @@ export function ErrorSuppressor() {
           const url = args[0]?.toString() || '';
           if (url.includes('/api/proxy/')) {
             // Silenciosamente manejar el 503 sin registrar error
+            // El navegador aún puede mostrar el 503 en la consola de red, pero no como error
             return response;
           }
         }
