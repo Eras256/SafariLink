@@ -40,7 +40,8 @@ interface SuperChatBotProps {
   position?: 'bottom-right' | 'bottom-left' | 'top-right' | 'top-left';
 }
 
-export function SuperChatBot({
+// Inner component that uses wagmi hooks - must be inside WagmiProvider
+function SuperChatBotInner({
   className = '',
   defaultOpen = false,
   position = 'bottom-right',
@@ -452,6 +453,45 @@ What would you like to explore today?`,
         )}
       </AnimatePresence>
     </div>
+  );
+}
+
+// Wrapper component that waits for mount and WagmiProvider to be available
+export function SuperChatBot({
+  className = '',
+  defaultOpen = false,
+  position = 'bottom-right',
+}: SuperChatBotProps) {
+  const [mounted, setMounted] = useState(false);
+  const [providerReady, setProviderReady] = useState(false);
+
+  useEffect(() => {
+    // Only render after component is mounted on client
+    // This ensures the provider is available
+    setMounted(true);
+    
+    // Wait a bit more to ensure provider is mounted
+    // This is necessary during hydration
+    const timer = setTimeout(() => {
+      setProviderReady(true);
+    }, 100);
+    
+    return () => clearTimeout(timer);
+  }, []);
+
+  // On server or before mount, don't render (or render a minimal version)
+  if (!mounted || !providerReady) {
+    return null;
+  }
+
+  // Render the inner component that uses wagmi hooks
+  // The provider must be available at this point
+  return (
+    <SuperChatBotInner
+      className={className}
+      defaultOpen={defaultOpen}
+      position={position}
+    />
   );
 }
 

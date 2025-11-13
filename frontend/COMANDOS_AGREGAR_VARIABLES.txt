@@ -1,0 +1,59 @@
+===========================================
+COMANDOS PARA AGREGAR VARIABLES EN VERCEL
+===========================================
+
+IMPORTANTE: Reemplaza "https://tu-backend-url.com" con la URL real de tu backend
+Si no tienes backend desplegado, sigue BACKEND_DEPLOYMENT_RAILWAY.md primero
+
+EJECUTA ESTOS COMANDOS DESDE: cd frontend
+===========================================
+
+1. NEXT_PUBLIC_API_URL (CRÍTICA)
+---------------------------------
+vercel env add NEXT_PUBLIC_API_URL production
+Valor: https://tu-backend-url.com
+
+vercel env add NEXT_PUBLIC_API_URL preview
+Valor: https://tu-backend-url.com
+
+vercel env add NEXT_PUBLIC_API_URL development
+Valor: http://localhost:4000
+
+2. NEXT_PUBLIC_API_BASE_URL
+----------------------------
+vercel env add NEXT_PUBLIC_API_BASE_URL production
+Valor: https://tu-backend-url.com/api
+
+vercel env add NEXT_PUBLIC_API_BASE_URL preview
+Valor: https://tu-backend-url.com/api
+
+vercel env add NEXT_PUBLIC_API_BASE_URL development
+Valor: http://localhost:4000/api
+
+3. NEXT_PUBLIC_APP_URL
+-----------------------
+vercel env add NEXT_PUBLIC_APP_URL production
+Valor: https://safari-link.vercel.app
+
+vercel env add NEXT_PUBLIC_APP_URL preview
+Valor: https://safari-link.vercel.app
+
+vercel env add NEXT_PUBLIC_APP_URL development
+Valor: http://localhost:3000
+
+4. NEXT_PUBLIC_BASE_URL
+------------------------
+vercel env add NEXT_PUBLIC_BASE_URL production
+Valor: https://safari-link.vercel.app
+
+vercel env add NEXT_PUBLIC_BASE_URL preview
+Valor: https://safari-link.vercel.app
+
+vercel env add NEXT_PUBLIC_BASE_URL development
+Valor: http://localhost:3000
+
+DESPUÉS DE AGREGAR:
+-------------------
+vercel env ls          # Verificar
+vercel --prod          # Redeployar
+

@@ -1,0 +1,41 @@
+===========================================
+VALORES PARA VARIABLES DE ENTORNO EN VERCEL
+===========================================
+
+IMPORTANTE: Necesitas la URL de tu backend en producción.
+Si no la tienes, despliega el backend primero (ver BACKEND_DEPLOYMENT_RAILWAY.md)
+
+VARIABLES A AGREGAR:
+====================
+
+1. NEXT_PUBLIC_API_URL
+   Production: https://tu-backend-url.com
+   Preview: https://tu-backend-url.com
+   Development: http://localhost:4000
+   
+   ⚠️  REEMPLAZA "https://tu-backend-url.com" con la URL real de tu backend
+
+2. NEXT_PUBLIC_API_BASE_URL
+   Production: https://tu-backend-url.com/api
+   Preview: https://tu-backend-url.com/api
+   Development: http://localhost:4000/api
+   
+   ⚠️  REEMPLAZA "https://tu-backend-url.com" con la URL real de tu backend
+
+3. NEXT_PUBLIC_APP_URL
+   Production: https://safari-link.vercel.app
+   Preview: https://safari-link.vercel.app
+   Development: http://localhost:3000
+
+4. NEXT_PUBLIC_BASE_URL
+   Production: https://safari-link.vercel.app
+   Preview: https://safari-link.vercel.app
+   Development: http://localhost:3000
+
+NOTA SOBRE TALENT PROTOCOL:
+===========================
+La API key de Talent Protocol (your_talent_protocol_api_key_here)
+debe estar en el BACKEND, no en el frontend.
+
+El frontend solo necesita NEXT_PUBLIC_API_URL que apunte al backend.
+

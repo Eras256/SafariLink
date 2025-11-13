@@ -5,6 +5,8 @@ import { useAppKit } from '@reown/appkit/react';
 import { Button } from '@/components/ui/button';
 import { truncateAddress } from '@/lib/utils';
 import { useEffect, useState } from 'react';
+import { getApiEndpoint } from '@/lib/api/config';
+import { API_ENDPOINTS } from '@/lib/constants';
 
 // Componente interno que usa los hooks de wagmi
 // Solo se renderiza cuando el provider está disponible
@@ -17,6 +19,7 @@ function WalletConnectInner() {
   const { disconnect } = useDisconnect();
   const [mounted, setMounted] = useState(false);
   const [appKitReady, setAppKitReady] = useState(false);
+  const [lastSyncedAddress, setLastSyncedAddress] = useState<string | null>(null);
   
   // Use AppKit hook - must be called unconditionally (React Hooks rule)
   // If AppKit is not initialized, this will throw an error at runtime
@@ -47,6 +50,38 @@ function WalletConnectInner() {
     
     return () => clearTimeout(timer);
   }, [mounted, appKit]); // Include appKit in dependencies
+
+  // Sync Talent Protocol profile automatically when wallet connects
+  useEffect(() => {
+    const syncTalentProtocol = async () => {
+      if (!address) {
+        return;
+      }
+
+      try {
+        const syncUrl = getApiEndpoint(API_ENDPOINTS.TALENT_PROTOCOL.SYNC_ADDRESS);
+        const response = await fetch(syncUrl, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ address }),
+        });
+
+        if (!response.ok) {
+          console.warn('Failed to auto-sync Talent Protocol profile');
+        } else {
+          setLastSyncedAddress(address.toLowerCase());
+        }
+      } catch (error) {
+        console.warn('Error auto-syncing Talent Protocol profile:', error);
+      }
+    };
+
+    if (isConnected && address && lastSyncedAddress !== address.toLowerCase()) {
+      syncTalentProtocol();
+    }
+  }, [isConnected, address, lastSyncedAddress]);
 
   const handleConnect = () => {
     if (appKit && appKit.open) {

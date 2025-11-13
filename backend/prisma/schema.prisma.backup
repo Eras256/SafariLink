@@ -3,7 +3,7 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
@@ -15,7 +15,7 @@ model User {
   emailVerified     Boolean   @default(false)
   
   // Profile
-  username          String?
+  username          String?   @unique
   bio               String?
   avatar            String?
   location          String?
@@ -35,12 +35,12 @@ model User {
   talentTotalRaised       String?
   talentProtocolScore     Int       @default(0)
   talentProtocolSyncedAt  DateTime?
-  talentProtocolData      String?     // JSON stored as text in SQLite
+  talentProtocolData      Json?     // Full profile data cache
   
   // Compliance
-  kycStatus         String    @default("NOT_STARTED") // KycStatus enum as string
+  kycStatus         KycStatus @default(NOT_STARTED)
   kycProvider       String?
-  kycData           String?     // JSON stored as text
+  kycData           Json?
   taxCountry        String?
   ofacScreened      Boolean   @default(false)
   ofacScreenedAt    DateTime?
@@ -75,6 +75,13 @@ model User {
   @@index([gamificationScore])
 }
 
+enum KycStatus {
+  NOT_STARTED
+  PENDING
+  APPROVED
+  REJECTED
+}
+
 model Hackathon {
   id                String    @id @default(cuid())
   slug              String    @unique
@@ -103,17 +110,17 @@ model Hackathon {
   winnersAnnounced  DateTime?
   
   // Location
-  locationType      String    // LocationType enum as string
+  locationType      LocationType
   location          String?
   isOnline          Boolean   @default(false)
   
-  // Blockchain - stored as comma-separated string in SQLite
-  chains            String    // "arbitrum,base,optimism"
+  // Blockchain
+  chains            String[]  // ["arbitrum", "base", "optimism"]
   
-  // Prizes - stored as string in SQLite
-  totalPrizePool    String    // Decimal stored as string
+  // Prizes
+  totalPrizePool    Decimal   @db.Decimal(18, 2)
   currency          String    @default("USDC")
-  prizeDistribution String    // JSON stored as text
+  prizeDistribution Json
   
   // Settings
   maxParticipants   Int?
@@ -125,14 +132,14 @@ model Hackathon {
   tracks            Track[]
   
   // Status
-  status            String    @default("DRAFT") // HackathonStatus enum as string
+  status            HackathonStatus @default(DRAFT)
   
-  // Metadata - stored as JSON strings
-  tags              String    // Comma-separated tags
-  sponsors          String?   // JSON stored as text
-  judges            String?   // JSON stored as text
-  schedule          String?   // JSON stored as text
-  resources         String?   // JSON stored as text
+  // Metadata
+  tags              String[]
+  sponsors          Json[]
+  judges            Json[]
+  schedule          Json?
+  resources         Json?
   
   // Timestamps
   createdAt         DateTime  @default(now())
@@ -154,12 +161,29 @@ model Hackathon {
   @@index([eventStart])
 }
 
+enum LocationType {
+  IN_PERSON
+  HYBRID
+  ONLINE
+}
+
+enum HackathonStatus {
+  DRAFT
+  PUBLISHED
+  REGISTRATION_OPEN
+  REGISTRATION_CLOSED
+  ONGOING
+  JUDGING
+  COMPLETED
+  CANCELLED
+}
+
 model Track {
   id            String     @id @default(cuid())
   hackathonId   String
   name          String
   description   String?
-  prizeAmount   String     // Decimal stored as string
+  prizeAmount   Decimal    @db.Decimal(18, 2)
   
   hackathon     Hackathon  @relation(fields: [hackathonId], references: [id], onDelete: Cascade)
   projects      Project[]
@@ -173,7 +197,7 @@ model HackathonRegistration {
   userId          String
   hackathonId     String
   
-  status          String     @default("PENDING") // RegistrationStatus enum as string
+  status          RegistrationStatus @default(PENDING)
   approvedAt      DateTime?
   
   // Team
@@ -181,7 +205,7 @@ model HackathonRegistration {
   teamRole        String?    // "leader", "member"
   
   // Metadata
-  applicationData String?    // JSON stored as text
+  applicationData Json?
   
   createdAt       DateTime   @default(now())
   updatedAt       DateTime   @updatedAt
@@ -193,6 +217,13 @@ model HackathonRegistration {
   @@unique([userId, hackathonId])
   @@index([hackathonId])
   @@index([teamId])
+}
+
+enum RegistrationStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  WAITLISTED
 }
 
 model Team {
@@ -250,26 +281,26 @@ model Project {
   figmaUrl        String?
   
   // Blockchain
-  contracts       String?    // JSON stored as text
-  techStack       String     // Comma-separated string
+  contracts       Json?      // { arbitrum: "0x...", base: "0x..." }
+  techStack       String[]
   
   // Judging
-  judgeScores     String?    // JSON stored as text
+  judgeScores     Json?
   finalScore      Float?
   rank            Int?
-  prizeWon        String?    // Decimal stored as string
+  prizeWon        Decimal?   @db.Decimal(18, 2)
   
   // AI checks
   plagiarismScore Float?
-  plagiarismReport String?   // JSON stored as text
+  plagiarismReport Json?
   
   // Status
-  status          String     @default("DRAFT") // ProjectStatus enum as string
+  status          ProjectStatus @default(DRAFT)
   submittedAt     DateTime?
   
   // Post-hackathon
   continued       Boolean   @default(false)
-  fundingRaised   String?   // Decimal stored as string
+  fundingRaised   Decimal?  @db.Decimal(18, 2)
   
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
@@ -286,6 +317,15 @@ model Project {
   @@index([trackId])
   @@index([teamId])
   @@index([status])
+}
+
+enum ProjectStatus {
+  DRAFT
+  SUBMITTED
+  UNDER_REVIEW
+  APPROVED
+  REJECTED
+  WINNER
 }
 
 model Vote {
@@ -313,8 +353,8 @@ model Comment {
   
   // Feedback fields
   rating      Int?     // 1-5 star rating (for mentors/judges)
-  feedbackType String  @default("COMMENT") // FeedbackType enum as string
-  userRole    String   @default("PARTICIPANT") // UserRole enum as string
+  feedbackType FeedbackType @default(COMMENT)
+  userRole    UserRole @default(PARTICIPANT) // Role of the user giving feedback
   isPublic    Boolean  @default(true) // Public comments visible to all
   
   createdAt   DateTime @default(now())
@@ -330,6 +370,21 @@ model Comment {
   @@index([createdAt])
 }
 
+enum FeedbackType {
+  COMMENT
+  SUGGESTION
+  PRAISE
+  WARNING
+  QUESTION
+}
+
+enum UserRole {
+  PARTICIPANT
+  MENTOR
+  JUDGE
+  ORGANIZER
+}
+
 model GrantApplication {
   id              String     @id @default(cuid())
   userId          String
@@ -337,20 +392,20 @@ model GrantApplication {
   
   // Grant details
   grantProgram    String     // "Arbitrum Foundation", "Optimism RetroPGF", etc.
-  amountRequested String     // Decimal stored as string
+  amountRequested Decimal    @db.Decimal(18, 2)
   
   // Application
   proposal        String
-  milestones      String     // JSON stored as text
-  budget          String     // JSON stored as text
+  milestones      Json
+  budget          Json
   
   // Status
-  status          String     @default("DRAFT") // GrantStatus enum as string
+  status          GrantStatus @default(DRAFT)
   submittedAt     DateTime?
   decidedAt       DateTime?
   
   // Result
-  amountApproved  String?    // Decimal stored as string
+  amountApproved  Decimal?   @db.Decimal(18, 2)
   
   createdAt       DateTime   @default(now())
   updatedAt       DateTime   @updatedAt
@@ -362,6 +417,14 @@ model GrantApplication {
   @@index([status])
 }
 
+enum GrantStatus {
+  DRAFT
+  SUBMITTED
+  UNDER_REVIEW
+  APPROVED
+  REJECTED
+}
+
 model NetworkingRoom {
   id              String    @id @default(cuid())
   hackathonId     String
@@ -371,7 +434,7 @@ model NetworkingRoom {
   name            String
   description     String?
   track           String?   // "DeFi", "NFT", "AI", "General", etc.
-  roomType        String    @default("GENERAL") // RoomType enum as string
+  roomType        RoomType  @default(GENERAL)
   
   // Settings
   maxParticipants Int?      @default(50)
@@ -386,7 +449,7 @@ model NetworkingRoom {
   isActive        Boolean   @default(true)
   
   // Metadata
-  metadata        String?   // JSON stored as text
+  metadata        Json?     // Additional settings, breakout sessions, etc.
   
   // Timestamps
   createdAt       DateTime  @default(now())
@@ -403,6 +466,14 @@ model NetworkingRoom {
   @@index([hackathonId])
   @@index([trackId])
   @@index([isActive])
+}
+
+enum RoomType {
+  GENERAL
+  TRACK_BASED
+  MENTOR_OFFICE_HOURS
+  JUDGE_QA
+  BREAKOUT
 }
 
 model RoomParticipant {
@@ -424,7 +495,7 @@ model RoomParticipant {
   streamId        String?   // Media stream ID
   
   // Metadata
-  metadata        String?   // JSON stored as text
+  metadata        Json?     // Position in grid, breakout session, etc.
   
   user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   room            NetworkingRoom @relation(fields: [roomId], references: [id], onDelete: Cascade)
@@ -442,10 +513,10 @@ model RoomMessage {
   
   // Message content
   content         String
-  messageType     String    @default("TEXT") // MessageType enum as string
+  messageType     MessageType @default(TEXT)
   
   // Attachments
-  attachments     String?   // JSON stored as text
+  attachments     Json?     // Files, links, etc.
   
   // Status
   isEdited        Boolean   @default(false)
@@ -462,6 +533,14 @@ model RoomMessage {
   @@index([roomId])
   @@index([userId])
   @@index([createdAt])
+}
+
+enum MessageType {
+  TEXT
+  SYSTEM
+  FILE
+  LINK
+  EMOJI
 }
 
 model BreakoutSession {
@@ -482,7 +561,7 @@ model BreakoutSession {
   endedAt         DateTime?
   
   // Metadata
-  metadata        String?   // JSON stored as text
+  metadata        Json?
   
   room            NetworkingRoom @relation("BreakoutSessionRoom", fields: [roomId], references: [id], onDelete: Cascade)
   parentRoom      NetworkingRoom? @relation("BreakoutSessionParent", fields: [parentRoomId], references: [id], onDelete: SetNull)
@@ -502,16 +581,16 @@ model Badge {
   name        String
   description String
   icon        String?  // Emoji or icon URL
-  rarity      String   @default("COMMON") // BadgeRarity enum as string
+  rarity      BadgeRarity @default(COMMON)
   
   // Requirements
-  badgeType   String   // BadgeType enum as string
-  requirement String?  // JSON stored as text
+  badgeType   BadgeType
+  requirement Json?    // Specific requirements (e.g., { "projects": 1, "feedback": 10 })
   points      Int      @default(0) // Points awarded when earned
   
   // NFT Reward
   nftReward   Boolean  @default(false)
-  nftMetadata String?  // JSON stored as text
+  nftMetadata Json?    // NFT metadata if nftReward is true
   
   // Status
   isActive    Boolean  @default(true)
@@ -528,6 +607,27 @@ model Badge {
   @@index([badgeType])
   @@index([rarity])
   @@index([isActive])
+}
+
+enum BadgeRarity {
+  COMMON
+  RARE
+  EPIC
+  LEGENDARY
+}
+
+enum BadgeType {
+  PROJECT_SUBMISSION
+  FEEDBACK_GIVEN
+  FEEDBACK_RECEIVED
+  NETWORKING
+  TEAM_COLLABORATION
+  DAILY_CHALLENGE
+  WINNER
+  PARTICIPATION
+  MENTOR_ACTIVITY
+  JUDGE_ACTIVITY
+  CUSTOM
 }
 
 model UserBadge {
@@ -560,10 +660,10 @@ model Challenge {
   // Challenge info
   title       String
   description String
-  challengeType String   // ChallengeType enum as string
+  challengeType ChallengeType
   
   // Requirements
-  requirement String   // JSON stored as text
+  requirement Json     // Specific requirements
   points      Int      @default(50)
   
   // Timing
@@ -574,7 +674,7 @@ model Challenge {
   
   // NFT Reward
   nftReward   Boolean  @default(false)
-  nftMetadata String?  // JSON stored as text
+  nftMetadata Json?
   
   // Timestamps
   createdAt   DateTime @default(now())
@@ -589,6 +689,16 @@ model Challenge {
   @@index([startDate])
   @@index([endDate])
   @@index([isActive])
+}
+
+enum ChallengeType {
+  PROJECT_UPDATE
+  FEEDBACK_GIVEN
+  NETWORKING_JOIN
+  CODE_COMMIT
+  DEMO_SHARE
+  SOCIAL_SHARE
+  CUSTOM
 }
 
 model UserChallenge {
@@ -654,36 +764,36 @@ model TeamMatchingProfile {
   hackathonId     String
   
   // Skills
-  skills          String    // Comma-separated string
-  skillLevels     String?   // JSON stored as text
+  skills          String[]  // ["Solidity", "React", "Node.js", "DeFi", "NFT"]
+  skillLevels     Json?     // { "Solidity": "expert", "React": "intermediate", ... }
   
   // GitHub Integration
   githubUsername  String?
   githubUrl       String?
-  githubData      String?   // JSON stored as text
+  githubData      Json?     // { repos: [...], languages: {...}, activity: {...} }
   githubAnalyzedAt DateTime?
   
   // Preferences
-  lookingFor      String    // Comma-separated string
+  lookingFor      String[]  // ["frontend", "backend", "smart-contracts", "design"]
   preferredRole   String?   // "leader", "member", "flexible"
-  teamSize        String?   // JSON stored as text
+  teamSize        Json?     // { min: 2, max: 5, preferred: 4 }
   
   // Availability
   availability    String?   // "full-time", "part-time", "weekend"
-  availableHours String?   // JSON stored as text
+  availableHours Json?     // { start: "09:00", end: "18:00", timezone: "UTC+3" }
   
   // Additional Info
   bio             String?
   experience      String?   // "beginner", "intermediate", "advanced", "expert"
-  previousProjects String?   // JSON stored as text
-  interests       String    // Comma-separated string
+  previousProjects Json?    // Array of previous project descriptions
+  interests       String[]  // Additional interests/topics
   
   // Status
   isActive        Boolean   @default(true)
   isLookingForTeam Boolean @default(true)
   
   // AI Analysis
-  aiAnalysis      String?   // JSON stored as text
+  aiAnalysis      Json?     // AI-generated analysis of skills and compatibility
   lastAnalyzedAt  DateTime?
   
   // Timestamps
@@ -715,18 +825,18 @@ model TeamMatch {
   
   // AI Analysis
   aiReasoning    String?   // AI-generated explanation of the match
-  strengths      String    // Comma-separated string
-  considerations String    // Comma-separated string
+  strengths      String[]  // What makes this a good match
+  considerations String[]  // Things to consider
   
   // Status
-  status         String    @default("PENDING") // MatchStatus enum as string
+  status         MatchStatus @default(PENDING)
   
   // Actions
-  senderAction   String?   // MatchAction enum as string
-  receiverAction String?   // MatchAction enum as string
+  senderAction   MatchAction? // "interested", "not_interested", null
+  receiverAction MatchAction? // "interested", "not_interested", null
   
   // Metadata
-  metadata       String?   // JSON stored as text
+  metadata       Json?     // Additional match data
   
   // Timestamps
   createdAt      DateTime  @default(now())
@@ -745,5 +855,17 @@ model TeamMatch {
   @@index([status])
   @@index([matchScore])
   @@index([createdAt])
+}
+
+enum MatchStatus {
+  PENDING
+  MUTUAL_INTEREST
+  NOT_INTERESTED
+  EXPIRED
+}
+
+enum MatchAction {
+  INTERESTED
+  NOT_INTERESTED
 }
 

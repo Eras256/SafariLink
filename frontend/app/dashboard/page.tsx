@@ -4,6 +4,7 @@
 export const dynamic = 'force-dynamic';
 
 import { useState, useEffect, Component, ErrorInfo, ReactNode } from 'react';
+import { CheckCircle2 } from 'lucide-react';
 import { useAccount } from 'wagmi';
 import { Navbar } from '@/components/layout/Navbar';
 import { Footer } from '@/components/layout/Footer';
@@ -23,6 +24,9 @@ import {
   Trophy,
 } from 'lucide-react';
 import { format } from 'date-fns';
+import { Button } from '@/components/ui/button';
+import { TalentProtocolBadge } from '@/components/profile/TalentProtocolBadge';
+import { useTalentProtocol } from '@/hooks/useTalentProtocol';
 
 interface Hackathon {
   id: string;
@@ -61,6 +65,14 @@ function DashboardContentInner() {
   const [hackathons, setHackathons] = useState<Hackathon[]>([]);
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState<DashboardStats | null>(null);
+  const [syncSuccess, setSyncSuccess] = useState(false);
+  const {
+    profile: talentProfile,
+    loading: talentLoading,
+    hasProfile: hasTalentProfile,
+    syncProfile: syncTalentProfile,
+    error: talentError,
+  } = useTalentProtocol();
 
   // Hooks must be called unconditionally (React rules)
   // WagmiProvider is always available on client-side via layout providers
@@ -189,6 +201,128 @@ function DashboardContentInner() {
             <p className="text-white/60 text-lg">
               Gestiona tus hackathons y visualiza métricas en tiempo real
             </p>
+          </div>
+
+          <div className="mb-8">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
+              <div>
+                <h2 className="text-xl font-bold text-white">Talent Protocol Identity</h2>
+                <p className="text-white/60 text-sm">
+                  Sincroniza tu reputación on-chain para impulsar tu puntaje de builder.
+                </p>
+              </div>
+              <Button
+                variant="outline"
+                onClick={async () => {
+                  setSyncSuccess(false);
+                  try {
+                    await syncTalentProfile();
+                    setSyncSuccess(true);
+                    // Clear success message after 5 seconds
+                    setTimeout(() => setSyncSuccess(false), 5000);
+                  } catch (error) {
+                    // Error is handled by the hook
+                  }
+                }}
+                className="border-white/20 text-white hover:bg-white/10"
+                disabled={talentLoading || !address}
+              >
+                {talentLoading ? 'Sincronizando...' : 'Sincronizar Ahora'}
+              </Button>
+            </div>
+
+            {syncSuccess && hasTalentProfile && (
+              <div className="mb-4 glassmorphic p-4 rounded-lg border border-green-500/30 bg-green-500/10">
+                <div className="flex items-center gap-2">
+                  <CheckCircle2 className="w-4 h-4 text-green-400" />
+                  <p className="text-green-400 text-sm">
+                    Perfil de Talent Protocol sincronizado correctamente
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {talentError && (
+              <div className="mb-4 glassmorphic p-4 rounded-lg border border-red-500/30 bg-red-500/10">
+                <p className="text-red-400 text-sm font-semibold mb-2">
+                  {talentError}
+                </p>
+                <div className="text-red-300/70 text-xs space-y-1">
+                  <p>Para sincronizar tu perfil de Talent Protocol:</p>
+                  <ul className="list-disc list-inside ml-2 space-y-1 mt-2">
+                    <li>Asegúrate de haber creado un perfil en <a href="https://app.talentprotocol.com" target="_blank" rel="noopener noreferrer" className="underline">Talent Protocol</a></li>
+                    <li>Usa la misma dirección de wallet que estás usando aquí</li>
+                    <li>Verifica que tu perfil esté completo y publicado</li>
+                    <li>Si acabas de crear tu perfil, espera unos minutos y vuelve a intentar</li>
+                  </ul>
+                  <p className="mt-2">
+                    <a href="https://app.talentprotocol.com" target="_blank" rel="noopener noreferrer" className="underline font-medium">
+                      Ir a Talent Protocol →
+                    </a>
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {talentLoading ? (
+              <div className="glassmorphic p-4 sm:p-5 rounded-lg border border-white/10 animate-pulse h-32" />
+            ) : hasTalentProfile ? (
+              <TalentProtocolBadge profile={talentProfile} />
+            ) : (
+              <div className="glassmorphic p-4 sm:p-5 md:p-6 rounded-lg border border-dashed border-purple-500/30 bg-gradient-to-r from-purple-500/5 to-pink-500/5">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 mb-2">
+                      <div className="w-8 h-8 bg-gradient-to-br from-purple-500 to-pink-500 rounded-lg flex items-center justify-center">
+                        <span className="text-white font-bold text-xs">TP</span>
+                      </div>
+                      <h3 className="text-white font-semibold text-base">Conecta tu perfil de Talent Protocol</h3>
+                    </div>
+                    <p className="text-white/70 text-sm mb-3">
+                      Crea o conecta tu perfil de Talent Protocol para mostrar tus logros, supporters y reputación on-chain. 
+                      Esto aumentará tu builder score automáticamente.
+                    </p>
+                    <ul className="text-white/60 text-xs space-y-1 mb-4">
+                      <li className="flex items-center gap-2">
+                        <span className="w-1.5 h-1.5 bg-purple-400 rounded-full" />
+                        Muestra tus logros y milestones
+                      </li>
+                      <li className="flex items-center gap-2">
+                        <span className="w-1.5 h-1.5 bg-purple-400 rounded-full" />
+                        Aumenta tu builder score
+                      </li>
+                      <li className="flex items-center gap-2">
+                        <span className="w-1.5 h-1.5 bg-purple-400 rounded-full" />
+                        Reputación verificada on-chain
+                      </li>
+                    </ul>
+                  </div>
+                  <div className="flex flex-col gap-2 sm:flex-shrink-0">
+                    <a
+                      href="https://www.talentprotocol.com"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="px-4 py-2 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white rounded-lg font-medium text-sm transition-all flex items-center justify-center gap-2"
+                    >
+                      <span>Ir a Talent Protocol</span>
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                      </svg>
+                    </a>
+                    <Button
+                      variant="outline"
+                      onClick={() => {
+                        void syncTalentProfile();
+                      }}
+                      className="border-purple-500/50 text-purple-300 hover:bg-purple-500/10 text-sm"
+                      disabled={talentLoading || !address}
+                    >
+                      {talentLoading ? 'Sincronizando...' : 'Sincronizar después de conectar'}
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
 
           {loading ? (

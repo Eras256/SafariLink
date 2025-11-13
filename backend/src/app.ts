@@ -13,6 +13,7 @@ import organizerRoutes from './routes/organizer.routes';
 import feedbackRoutes from './routes/feedback.routes';
 import gamificationRoutes from './routes/gamification.routes';
 import teamMatchingRoutes from './routes/teamMatching.routes';
+import talentProtocolRoutes from './routes/talentProtocol.routes';
 import { WebSocketService } from './services/websocket.service';
 import { setWebSocketService } from './controllers/teamMatching.controller';
 
@@ -40,6 +41,7 @@ app.use('/api/organizer', organizerRoutes);
 app.use('/api/feedback', feedbackRoutes);
 app.use('/api/gamification', gamificationRoutes);
 app.use('/api/team-matching', teamMatchingRoutes);
+app.use('/api/talent-protocol', talentProtocolRoutes);
 
 // Error handling
 app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {

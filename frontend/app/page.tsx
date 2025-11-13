@@ -6,6 +6,7 @@ export const dynamic = 'force-dynamic';
 import { HeroSection } from '@/components/home/HeroSection';
 import { ProblemStatement } from '@/components/home/ProblemStatement';
 import { SolutionHighlights } from '@/components/home/SolutionHighlights';
+import { WhyThisIsBold } from '@/components/home/WhyThisIsBold';
 import { KeyFeatures } from '@/components/home/KeyFeatures';
 import { HowItWorks } from '@/components/home/HowItWorks';
 import { EcosystemPartners } from '@/components/home/EcosystemPartners';
@@ -44,6 +45,7 @@ export default function Home() {
       <HeroSection />
       <ProblemStatement />
       <SolutionHighlights />
+      <WhyThisIsBold />
       <KeyFeatures />
       <HowItWorks />
       <EcosystemPartners />

@@ -64,5 +64,19 @@ export const API_ENDPOINTS = {
     DASHBOARD: (id: string) => `/api/organizer/${id}/dashboard`,
     REALTIME_METRICS: (id: string) => `/api/organizer/${id}/metrics/realtime`,
   },
+  TALENT_PROTOCOL: {
+    SYNC_ADDRESS: '/api/talent-protocol/sync-address',
+    PROFILE_BY_ADDRESS: (address: string) => `/api/talent-protocol/profile/by-address?address=${encodeURIComponent(address)}`,
+  },
 } as const;
+
+/**
+ * NOTA: Para obtener la URL base de la API, usa getApiUrl() de @/lib/api/config
+ * en lugar de process.env.NEXT_PUBLIC_API_URL directamente.
+ * 
+ * Ejemplo:
+ * import { getApiUrl, getApiEndpoint } from '@/lib/api/config';
+ * const apiUrl = getApiUrl();
+ * const fullUrl = getApiEndpoint(API_ENDPOINTS.AUTH.ME);
+ */
 
