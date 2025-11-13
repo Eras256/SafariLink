@@ -78,9 +78,11 @@ export function ErrorSuppressor() {
 
     // Also handle unhandled promise rejections from extensions and Base Account SDK
     // Interceptar errores de fetch que devuelven 503
-    originalFetchRef.current = window.fetch;
+    // IMPORTANTE: Usar .bind(window) para preservar el contexto y evitar "Illegal invocation"
+    originalFetchRef.current = window.fetch.bind(window);
     window.fetch = async (...args) => {
       try {
+        // Llamar al fetch original con el contexto correcto
         const response = await originalFetchRef.current!(...args);
         
         // Si es un 503 del proxy, no registrar como error
