@@ -1,11 +1,13 @@
 'use client';
 
-import { useReadContract, useWriteContract, useWaitForTransactionReceipt } from 'wagmi';
+import { useReadContract, useWriteContract, useWaitForTransactionReceipt, useAccount } from 'wagmi';
 import { Address } from 'viem';
 import { NFT_CERTIFICATE_ABI, NFT_CERTIFICATE_ADDRESS } from '@/lib/web3/contracts';
 
-export function useNFTCertificate(chainId: number) {
-  const address = NFT_CERTIFICATE_ADDRESS[chainId];
+export function useNFTCertificate(chainId?: number) {
+  const { chain } = useAccount();
+  const activeChainId = chainId ?? chain?.id;
+  const address = activeChainId ? NFT_CERTIFICATE_ADDRESS[activeChainId] : undefined;
 
   // Read: Get certificate count for user
   const { data: certificateCount, refetch: refetchCount } = useReadContract({
@@ -109,6 +111,7 @@ export function useNFTCertificate(chainId: number) {
 
   return {
     address,
+    chainId: activeChainId,
     certificateCount,
     refetchCount,
     getUserCertificates,
@@ -125,6 +128,7 @@ export function useNFTCertificate(chainId: number) {
     isBatchMinting: isBatchMinting || isConfirmingBatch,
     isBatchSuccess,
     batchHash,
+    isSupported: !!address,
   };
 }
 
