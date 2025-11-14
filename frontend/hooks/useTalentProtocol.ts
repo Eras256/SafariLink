@@ -3,8 +3,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useAccount } from 'wagmi';
 import { TalentProtocolProfile } from '@/lib/talent-protocol/talentProtocol';
-import { getApiUrl, getApiEndpoint } from '@/lib/api/config';
-import { API_ENDPOINTS } from '@/lib/constants';
 
 interface UseTalentProtocolReturn {
   profile: TalentProtocolProfile | null;
@@ -22,8 +20,6 @@ export function useTalentProtocol(addressOverride?: string): UseTalentProtocolRe
   const [loading, setLoading] = useState<boolean>(!!address);
   const [error, setError] = useState<string | null>(null);
 
-  const apiUrl = getApiUrl();
-
   const fetchProfile = useCallback(async () => {
     if (!address) {
       setProfile(null);
@@ -36,12 +32,13 @@ export function useTalentProtocol(addressOverride?: string): UseTalentProtocolRe
       setLoading(true);
       setError(null);
 
-      const fetchUrl = getApiEndpoint(API_ENDPOINTS.TALENT_PROTOCOL.PROFILE_BY_ADDRESS(address));
-      console.log('Obteniendo perfil de Talent Protocol:', { address, fetchUrl });
+      // Use direct Next.js endpoint (without proxy/backend)
+      const fetchUrl = `/api/talent-protocol/profile/by-address?address=${encodeURIComponent(address)}`;
+      console.log('Fetching Talent Protocol profile:', { address, fetchUrl });
 
-      // Crear AbortController para timeout
+      // Create AbortController for timeout
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 segundos
+      const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 seconds
 
       const response = await fetch(fetchUrl, {
         signal: controller.signal,
@@ -49,12 +46,12 @@ export function useTalentProtocol(addressOverride?: string): UseTalentProtocolRe
 
       clearTimeout(timeoutId);
 
-      // Parsear respuesta primero para verificar si es un error del proxy
+      // Parse response
       let data;
       try {
         data = await response.json();
       } catch {
-        // Si no se puede parsear, tratar como error
+        // If parsing fails, treat as error
         if (response.status === 404) {
           setProfile(null);
           setLoading(false);
@@ -62,14 +59,6 @@ export function useTalentProtocol(addressOverride?: string): UseTalentProtocolRe
           return;
         }
         throw new Error(`Error ${response.status}: ${response.statusText}`);
-      }
-
-      // Verificar si es un error del proxy (backend no disponible)
-      if (data.error === 'Backend not available' || data.error === 'Backend not configured' || data.error === 'Proxy error') {
-        setError(null); // No mostrar error, simplemente no hay backend
-        setProfile(null);
-        setLoading(false);
-        return; // Salir silenciosamente
       }
 
       if (response.status === 404) {
@@ -89,40 +78,13 @@ export function useTalentProtocol(addressOverride?: string): UseTalentProtocolRe
     } catch (err: any) {
       console.error('Error fetching Talent Protocol profile:', err);
       
-      // Intentar parsear el error si viene del proxy
-      let errorData;
-      try {
-        if (err.response) {
-          errorData = await err.response.json();
-        }
-      } catch {
-        // No se puede parsear
-      }
-      
-      // Si es un error del proxy indicando que no hay backend, no mostrar error
-      if (errorData?.error === 'Backend not available' || errorData?.error === 'Backend not configured') {
-        setError(null);
-        setProfile(null);
-        setLoading(false);
-        return;
-      }
-      
-      // Mejorar mensajes de error
-      let errorMessage = err.message || 'Error al obtener el perfil de Talent Protocol';
+      // Improve error messages
+      let errorMessage = err.message || 'Error fetching Talent Protocol profile';
       
       if (err.name === 'AbortError' || err.name === 'TimeoutError') {
-        errorMessage = 'La solicitud tardó demasiado. Por favor intenta de nuevo.';
-      } else if (err.message.includes('Failed to fetch') || err.message.includes('NetworkError') || err.message.includes('ERR_CONNECTION_REFUSED')) {
-        // Verificar si es un error del proxy (backend no configurado)
-        if (err.message.includes('Backend not configured') || err.message.includes('Backend not available') || err.message.includes('503')) {
-          // No mostrar error, simplemente no hay backend disponible
-          setError(null);
-          setProfile(null);
-          setLoading(false);
-          return;
-        } else {
-          errorMessage = 'No se pudo conectar con el servidor. Verifica que el backend esté corriendo.';
-        }
+        errorMessage = 'Request timed out. Please try again.';
+      } else if (err.message.includes('Failed to fetch') || err.message.includes('NetworkError')) {
+        errorMessage = 'Could not connect to server. Please try again.';
       }
       
       setError(errorMessage);
@@ -144,12 +106,13 @@ export function useTalentProtocol(addressOverride?: string): UseTalentProtocolRe
       setLoading(true);
       setError(null);
 
-      const syncUrl = getApiEndpoint(API_ENDPOINTS.TALENT_PROTOCOL.SYNC_ADDRESS);
-      console.log('Sincronizando perfil de Talent Protocol:', { address, syncUrl });
+      // Use direct Next.js endpoint (without proxy/backend)
+      const syncUrl = '/api/talent-protocol/sync-address';
+      console.log('Syncing Talent Protocol profile:', { address, syncUrl });
 
-      // Crear AbortController para timeout
+      // Create AbortController for timeout
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 segundos para sync
+      const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 seconds for sync
 
       const response = await fetch(syncUrl, {
         method: 'POST',
@@ -162,24 +125,16 @@ export function useTalentProtocol(addressOverride?: string): UseTalentProtocolRe
 
       clearTimeout(timeoutId);
 
-      // Parsear respuesta primero para verificar si es un error del proxy
+      // Parse response
       let data;
       try {
         data = await response.json();
       } catch {
-        // Si no se puede parsear, tratar como error
+        // If parsing fails, treat as error
         if (!response.ok) {
           throw new Error(`Error ${response.status}: ${response.statusText}`);
         }
         throw new Error('Invalid response from server');
-      }
-
-      // Verificar si es un error del proxy (backend no disponible)
-      if (data.error === 'Backend not available' || data.error === 'Backend not configured' || data.error === 'Proxy error') {
-        setError(null); // No mostrar error
-        setProfile(null);
-        setLoading(false);
-        return; // Salir silenciosamente
       }
 
       if (!response.ok) {
@@ -187,7 +142,7 @@ export function useTalentProtocol(addressOverride?: string): UseTalentProtocolRe
         throw new Error(errorMessage);
       }
 
-      console.log('Respuesta de sincronización:', data);
+      console.log('Sync response:', data);
       
       // Use the profile returned from sync directly
       if (data.profile) {
@@ -196,7 +151,7 @@ export function useTalentProtocol(addressOverride?: string): UseTalentProtocolRe
       } else if (data.hasProfile === false) {
         // Explicitly no profile found
         setProfile(null);
-        setError('No se encontró un perfil de Talent Protocol para esta dirección. Asegúrate de haber creado un perfil en Talent Protocol con esta dirección de wallet.');
+        setError('No Talent Protocol profile found for this address. Make sure you have created a profile on Talent Protocol with this wallet address.');
       } else {
         // If no profile returned, fetch it
         await fetchProfile();
@@ -204,40 +159,13 @@ export function useTalentProtocol(addressOverride?: string): UseTalentProtocolRe
     } catch (err: any) {
       console.error('Error syncing Talent Protocol profile:', err);
       
-      // Intentar parsear el error si viene del proxy
-      let errorData;
-      try {
-        if (err.response) {
-          errorData = await err.response.json();
-        }
-      } catch {
-        // No se puede parsear
-      }
-      
-      // Si es un error del proxy indicando que no hay backend, no mostrar error
-      if (errorData?.error === 'Backend not available' || errorData?.error === 'Backend not configured') {
-        setError(null);
-        setProfile(null);
-        setLoading(false);
-        return;
-      }
-      
-      // Mejorar mensajes de error
-      let errorMessage = 'Error al sincronizar el perfil de Talent Protocol';
+      // Improve error messages
+      let errorMessage = 'Error syncing Talent Protocol profile';
       
       if (err.name === 'AbortError' || err.name === 'TimeoutError') {
-        errorMessage = 'La sincronización tardó demasiado. Por favor intenta de nuevo.';
-      } else if (err.message.includes('Failed to fetch') || err.message.includes('NetworkError') || err.message.includes('ERR_CONNECTION_REFUSED')) {
-        // Verificar si es un error del proxy (backend no configurado)
-        if (err.message.includes('Backend not configured') || err.message.includes('Backend not available') || err.message.includes('503')) {
-          // No mostrar error, simplemente no hay backend disponible
-          setError(null);
-          setProfile(null);
-          setLoading(false);
-          return;
-        } else {
-          errorMessage = 'No se pudo conectar con el servidor. Verifica que el backend esté corriendo.';
-        }
+        errorMessage = 'Sync timed out. Please try again.';
+      } else if (err.message.includes('Failed to fetch') || err.message.includes('NetworkError')) {
+        errorMessage = 'Could not connect to server. Please try again.';
       } else if (err.message) {
         errorMessage = err.message;
       }

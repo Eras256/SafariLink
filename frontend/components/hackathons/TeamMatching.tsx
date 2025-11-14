@@ -2,7 +2,6 @@
 
 import React, { useState, useEffect } from 'react';
 import { useAccount } from 'wagmi';
-import { getApiUrl, getApiEndpoint } from '@/lib/api/config';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Users,
@@ -22,7 +21,6 @@ import {
   MessageSquare,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { io, Socket } from 'socket.io-client';
 
 interface TeamMatchingProfile {
   id: string;
@@ -109,7 +107,6 @@ export function TeamMatching({ hackathonId, userId }: TeamMatchingProps) {
   const [searching, setSearching] = useState(false);
   const [activeTab, setActiveTab] = useState<'profile' | 'matches' | 'my-matches'>('profile');
   const [showProfileForm, setShowProfileForm] = useState(false);
-  const [socket, setSocket] = useState<Socket | null>(null);
   const [notifications, setNotifications] = useState<any[]>([]);
 
   // Form state
@@ -127,49 +124,24 @@ export function TeamMatching({ hackathonId, userId }: TeamMatchingProps) {
     githubUrl: '',
   });
 
-  // Initialize WebSocket connection
+  // Poll for new matches (alternative to WebSocket)
   useEffect(() => {
-    if (!address) return;
+    if (!address || !hackathonId) return;
 
-    const apiUrl = getApiUrl();
-    const newSocket = io(apiUrl.replace('http', 'ws'), {
-      auth: {
-        token: address, // In production, use JWT token
-        userId: address,
-      },
-      transports: ['websocket', 'polling'],
-    });
+    const pollInterval = setInterval(() => {
+      void fetchUserMatches();
+    }, 30000); // Poll every 30 seconds
 
-    newSocket.on('connect', () => {
-      console.log('WebSocket connected for team matching');
-    });
-
-    newSocket.on('team-match:mutual-interest', (data) => {
-      setNotifications((prev) => [...prev, data]);
-      // Refresh matches
-      fetchUserMatches();
-    });
-
-    newSocket.on('team-match:new', (data) => {
-      setNotifications((prev) => [...prev, data]);
-      // Refresh matches
-      fetchUserMatches();
-    });
-
-    setSocket(newSocket);
-
-    return () => {
-      newSocket.close();
-    };
-  }, [address]);
+    return () => clearInterval(pollInterval);
+  }, [address, hackathonId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Fetch profile
   const fetchProfile = async () => {
     try {
-      const apiUrl = getApiUrl();
-      const response = await fetch(`${apiUrl}/api/team-matching/hackathons/${hackathonId}/profile`, {
+      const response = await fetch(`/api/team-matching/profile?hackathonId=${encodeURIComponent(hackathonId)}`, {
         headers: {
-          Authorization: `Bearer ${address}`, // In production, use JWT token
+          'x-user-id': address || '',
+          Authorization: `Bearer ${address}`,
         },
       });
 
@@ -204,9 +176,9 @@ export function TeamMatching({ hackathonId, userId }: TeamMatchingProps) {
   // Fetch user matches
   const fetchUserMatches = async () => {
     try {
-      const apiUrl = getApiUrl();
-      const response = await fetch(`${apiUrl}/api/team-matching/hackathons/${hackathonId}/my-matches`, {
+      const response = await fetch(`/api/team-matching/my-matches?hackathonId=${encodeURIComponent(hackathonId)}`, {
         headers: {
+          'x-user-id': address || '',
           Authorization: `Bearer ${address}`,
         },
       });
@@ -224,9 +196,9 @@ export function TeamMatching({ hackathonId, userId }: TeamMatchingProps) {
   const findMatches = async () => {
     setSearching(true);
     try {
-      const apiUrl = getApiUrl();
-      const response = await fetch(`${apiUrl}/api/team-matching/hackathons/${hackathonId}/matches?limit=10`, {
+      const response = await fetch(`/api/team-matching/matches?hackathonId=${encodeURIComponent(hackathonId)}&limit=10`, {
         headers: {
+          'x-user-id': address || '',
           Authorization: `Bearer ${address}`,
         },
       });
@@ -246,15 +218,18 @@ export function TeamMatching({ hackathonId, userId }: TeamMatchingProps) {
   // Save profile
   const saveProfile = async () => {
     try {
-      const apiUrl = getApiUrl();
       const method = profile ? 'PUT' : 'POST';
-      const response = await fetch(`${apiUrl}/api/team-matching/hackathons/${hackathonId}/profile`, {
+      const response = await fetch('/api/team-matching/profile', {
         method,
         headers: {
           'Content-Type': 'application/json',
+          'x-user-id': address || '',
           Authorization: `Bearer ${address}`,
         },
-        body: JSON.stringify(formData),
+        body: JSON.stringify({
+          hackathonId,
+          ...formData,
+        }),
       });
 
       if (response.ok) {
@@ -274,14 +249,14 @@ export function TeamMatching({ hackathonId, userId }: TeamMatchingProps) {
   // Respond to match
   const respondToMatch = async (matchId: string, action: 'INTERESTED' | 'NOT_INTERESTED') => {
     try {
-      const apiUrl = getApiUrl();
-      const response = await fetch(`${apiUrl}/api/team-matching/matches/${matchId}/respond`, {
+      const response = await fetch('/api/team-matching/respond', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'x-user-id': address || '',
           Authorization: `Bearer ${address}`,
         },
-        body: JSON.stringify({ action }),
+        body: JSON.stringify({ matchId, action }),
       });
 
       if (response.ok) {
@@ -404,25 +379,25 @@ export function TeamMatching({ hackathonId, userId }: TeamMatchingProps) {
               <div className="glassmorphic p-6 rounded-lg text-center">
                 <Users className="w-16 h-16 text-blue-400 mx-auto mb-4" />
                 <h3 className="text-xl font-semibold text-white mb-2">
-                  Crea tu perfil de Team Matching
+                  Create your Team Matching profile
                 </h3>
                 <p className="text-white/60 mb-6">
-                  Completa tu perfil para encontrar compañeros de equipo ideales
+                  Complete your profile to find ideal team members
                 </p>
                 <Button onClick={() => setShowProfileForm(true)} className="bg-blue-500 hover:bg-blue-600">
-                  Crear Perfil
+                  Create Profile
                 </Button>
               </div>
             ) : (
               <div className="glassmorphic p-6 rounded-lg">
                 <div className="flex items-center justify-between mb-6">
-                  <h3 className="text-xl font-semibold text-white">Mi Perfil</h3>
+                  <h3 className="text-xl font-semibold text-white">My Profile</h3>
                   <Button
                     onClick={() => setShowProfileForm(true)}
                     variant="outline"
                     className="border-white/20 text-white hover:bg-white/10"
                   >
-                    Editar
+                    Edit
                   </Button>
                 </div>
 
@@ -442,7 +417,7 @@ export function TeamMatching({ hackathonId, userId }: TeamMatchingProps) {
                   </div>
 
                   <div>
-                    <h4 className="text-sm font-medium text-white/60 mb-2">Busco</h4>
+                    <h4 className="text-sm font-medium text-white/60 mb-2">Looking For</h4>
                     <div className="flex flex-wrap gap-2">
                       {profile.lookingFor?.map((item) => (
                         <span
@@ -456,13 +431,13 @@ export function TeamMatching({ hackathonId, userId }: TeamMatchingProps) {
                   </div>
 
                   <div>
-                    <h4 className="text-sm font-medium text-white/60 mb-2">Rol Preferido</h4>
+                    <h4 className="text-sm font-medium text-white/60 mb-2">Preferred Role</h4>
                     <p className="text-white">{profile.preferredRole || 'Flexible'}</p>
                   </div>
 
                   <div>
-                    <h4 className="text-sm font-medium text-white/60 mb-2">Disponibilidad</h4>
-                    <p className="text-white">{profile.availability || 'No especificada'}</p>
+                    <h4 className="text-sm font-medium text-white/60 mb-2">Availability</h4>
+                    <p className="text-white">{profile.availability || 'Not specified'}</p>
                   </div>
 
                   {profile.bio && (
@@ -499,7 +474,7 @@ export function TeamMatching({ hackathonId, userId }: TeamMatchingProps) {
               >
                 <div className="flex items-center justify-between mb-6">
                   <h3 className="text-xl font-semibold text-white">
-                    {profile ? 'Editar Perfil' : 'Crear Perfil'}
+                    {profile ? 'Edit Profile' : 'Create Profile'}
                   </h3>
                   <button
                     onClick={() => setShowProfileForm(false)}
@@ -530,7 +505,7 @@ export function TeamMatching({ hackathonId, userId }: TeamMatchingProps) {
 
                   <div>
                     <label className="block text-sm font-medium text-white/80 mb-2">
-                      Busco (separados por comas)
+                      Looking For (comma separated)
                     </label>
                     <input
                       type="text"
@@ -541,7 +516,7 @@ export function TeamMatching({ hackathonId, userId }: TeamMatchingProps) {
                           lookingFor: e.target.value.split(',').map((s) => s.trim()).filter(Boolean),
                         })
                       }
-                      placeholder="Ej: frontend, backend, smart-contracts, design"
+                      placeholder="E.g: frontend, backend, smart-contracts, design"
                       className="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                     />
                   </div>
@@ -549,7 +524,7 @@ export function TeamMatching({ hackathonId, userId }: TeamMatchingProps) {
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <label className="block text-sm font-medium text-white/80 mb-2">
-                        Rol Preferido
+                        Preferred Role
                       </label>
                       <select
                         value={formData.preferredRole}
@@ -562,14 +537,14 @@ export function TeamMatching({ hackathonId, userId }: TeamMatchingProps) {
                         className="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                       >
                         <option value="flexible">Flexible</option>
-                        <option value="leader">Líder</option>
-                        <option value="member">Miembro</option>
+                        <option value="leader">Leader</option>
+                        <option value="member">Member</option>
                       </select>
                     </div>
 
                     <div>
                       <label className="block text-sm font-medium text-white/80 mb-2">
-                        Disponibilidad
+                        Availability
                       </label>
                       <select
                         value={formData.availability}

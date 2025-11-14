@@ -80,8 +80,8 @@ export const API_ENDPOINTS = {
 } as const;
 
 /**
- * NOTA: Para obtener la URL base de la API, usa getApiUrl() de @/lib/api/config
- * en lugar de process.env.NEXT_PUBLIC_API_URL directamente.
+ * NOTE: To get the API base URL, use getApiUrl() from @/lib/api/config
+ * instead of process.env.NEXT_PUBLIC_API_URL directly.
  * 
  * Ejemplo:
  * import { getApiUrl, getApiEndpoint } from '@/lib/api/config';

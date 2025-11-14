@@ -1,13 +1,13 @@
 /**
- * Endpoint /api/chat - Superinteligencia Chatbot powered by Gemini
- * Características avanzadas: memoria contextual, análisis profundo, razonamiento mejorado
+ * Endpoint /api/chat - Superintelligence Chatbot powered by Gemini
+ * Advanced features: contextual memory, deep analysis, enhanced reasoning
  * POST /api/chat
  */
 
 import { NextRequest, NextResponse } from 'next/server';
 import { callGemini, GeminiConfig } from '@/lib/ai/gemini-advanced';
 
-// CRÍTICO: Fuerza runtime Node.js (no Edge Runtime)
+// CRITICAL: Force Node.js runtime (not Edge Runtime)
 export const runtime = 'nodejs';
 
 interface ChatRequest {
@@ -35,7 +35,7 @@ interface ChatRequest {
 }
 
 /**
- * Genera un prompt de superinteligencia con contexto avanzado
+ * Generates a superintelligence prompt with advanced context
  */
 function generateSuperIntelligencePrompt(
   message: string,
@@ -107,7 +107,7 @@ export async function POST(request: NextRequest) {
       options = {},
     } = body;
 
-    // Validar que el mensaje esté presente
+    // Validate that message is present
     if (!message || typeof message !== 'string' || message.trim().length === 0) {
       return NextResponse.json(
         {
@@ -118,24 +118,24 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Generar prompt de superinteligencia
+    // Generate superintelligence prompt
     const fullPrompt = generateSuperIntelligencePrompt(
       message,
       conversationHistory,
       context
     );
 
-    // Configuración avanzada para superinteligencia
+    // Advanced configuration for superintelligence
     const config: GeminiConfig = {
-      temperature: options.temperature ?? 0.8, // Más creativo pero controlado
-      topP: 0.95, // Mayor diversidad en respuestas
+      temperature: options.temperature ?? 0.8, // More creative but controlled
+      topP: 0.95, // Greater diversity in responses
       topK: 40,
-      maxOutputTokens: options.maxTokens ?? 2048, // Respuestas más completas
+      maxOutputTokens: options.maxTokens ?? 2048, // More complete responses
     };
 
     console.log('[SuperChat] Processing message with superintelligence...');
 
-    // Llamar a Gemini con configuración avanzada
+    // Call Gemini with advanced configuration
     const result = await callGemini(fullPrompt, config, false);
 
     if (!result.success) {
@@ -165,10 +165,10 @@ export async function POST(request: NextRequest) {
 
     console.log(`[SuperChat] Response generated successfully using model: ${modelUsed}`);
 
-    // Analizar la respuesta para extraer insights adicionales
+    // Analyze response to extract additional insights
     const insights = extractInsights(response, message);
 
-    // Retornar respuesta con metadata
+    // Return response with metadata
     return NextResponse.json({
       success: true,
       data: {
@@ -192,7 +192,7 @@ export async function POST(request: NextRequest) {
 }
 
 /**
- * Extrae insights adicionales de la respuesta
+ * Extracts additional insights from the response
  */
 function extractInsights(response: string, originalMessage: string): {
   keyPoints?: string[];
@@ -205,7 +205,7 @@ function extractInsights(response: string, originalMessage: string): {
     relatedTopics?: string[];
   } = {};
 
-  // Detectar puntos clave (listas numeradas o con bullets)
+  // Detect key points (numbered lists or bullets)
   const keyPointsMatch = response.match(/(?:^|\n)(?:\d+\.|\-|\*)\s+(.+?)(?=\n|$)/g);
   if (keyPointsMatch && keyPointsMatch.length > 0) {
     insights.keyPoints = keyPointsMatch
@@ -213,7 +213,7 @@ function extractInsights(response: string, originalMessage: string): {
       .map((point) => point.replace(/^(?:\d+\.|\-|\*)\s+/, '').trim());
   }
 
-  // Detectar acciones sugeridas (palabras clave como "should", "can", "try")
+  // Detect suggested actions (keywords like "should", "can", "try")
   const actionKeywords = ['should', 'can', 'try', 'consider', 'recommend', 'suggest'];
   const suggestedActions: string[] = [];
   const sentences = response.split(/[.!?]+/);
@@ -232,7 +232,7 @@ function extractInsights(response: string, originalMessage: string): {
     insights.suggestedActions = suggestedActions.slice(0, 3);
   }
 
-  // Detectar temas relacionados (palabras técnicas comunes)
+  // Detect related topics (common technical keywords)
   const techKeywords = [
     'blockchain', 'smart contract', 'solidity', 'defi', 'nft', 'dao',
     'ai', 'machine learning', 'neural network', 'llm',

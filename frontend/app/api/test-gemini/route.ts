@@ -1,12 +1,12 @@
 /**
- * Endpoint de prueba para validar la conectividad con Gemini AI
+ * Test endpoint to validate connectivity with Gemini AI
  * GET /api/test-gemini
  */
 
 import { NextRequest, NextResponse } from 'next/server';
 import { testGeminiConnection } from '@/lib/ai/gemini-advanced';
 
-// CRÍTICO: Fuerza runtime Node.js (no Edge Runtime)
+// CRITICAL: Force Node.js runtime (not Edge Runtime)
 export const runtime = 'nodejs';
 
 export async function GET(request: NextRequest) {
@@ -17,7 +17,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json(
         {
           success: true,
-          message: 'Conexión con Gemini AI exitosa',
+          message: 'Connection to Gemini AI successful',
           modelUsed: result.modelUsed,
           data: result.data,
         },
@@ -27,7 +27,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json(
         {
           success: false,
-          message: 'Error al conectar con Gemini AI',
+          message: 'Error connecting to Gemini AI',
           error: result.error,
           modelUsed: result.modelUsed,
         },
@@ -35,11 +35,11 @@ export async function GET(request: NextRequest) {
       );
     }
   } catch (error: any) {
-    console.error('[API] Error en test-gemini:', error);
+    console.error('[API] Error in test-gemini:', error);
     return NextResponse.json(
       {
         success: false,
-        message: 'Error al probar conexión con Gemini',
+        message: 'Error testing connection to Gemini',
         error: error.message || 'Unknown error',
       },
       { status: 500 }

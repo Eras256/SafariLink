@@ -1,40 +1,40 @@
 /**
- * API Proxy Route para Next.js
- * Permite que el frontend haga requests al backend sin problemas de CORS
- * y sin necesidad de configurar URLs en el cliente
+ * API Proxy Route for Next.js
+ * Allows frontend to make requests to backend without CORS issues
+ * and without needing to configure URLs on the client
  */
 
 import { NextRequest, NextResponse } from 'next/server';
 
-// URL del backend - puede venir de variable de entorno o usar detección
+// Backend URL - can come from environment variable or use detection
 function getBackendUrl(): string {
-  // Prioridad 1: Variable de entorno explícita
+  // Priority 1: Explicit environment variable
   if (process.env.NEXT_PUBLIC_API_URL) {
     return process.env.NEXT_PUBLIC_API_URL;
   }
   
-  // Prioridad 2: Variable de entorno del servidor (no expuesta al cliente)
+  // Priority 2: Server environment variable (not exposed to client)
   if (process.env.BACKEND_URL) {
     return process.env.BACKEND_URL;
   }
   
-  // Prioridad 3: Detección automática basada en el host de Vercel
+  // Priority 3: Automatic detection based on Vercel host
   const vercelUrl = process.env.VERCEL_URL;
   if (vercelUrl && !vercelUrl.includes('localhost')) {
-    // En Vercel, intentar usar subdominio api
+    // On Vercel, try to use api subdomain
     const hostname = vercelUrl.replace('https://', '').replace('http://', '').split('/')[0];
-    // Si es safari-link.vercel.app, intentar api.safari-link.vercel.app
-    // Pero esto solo funciona si el backend está en ese subdominio
-    // Por ahora, retornar null para que el proxy falle claramente
-    // y el usuario sepa que necesita configurar la variable
+    // If it's safari-link.vercel.app, try api.safari-link.vercel.app
+    // But this only works if backend is on that subdomain
+    // For now, return null so proxy fails clearly
+    // and user knows they need to configure the variable
     return `https://api.${hostname}`;
   }
   
-  // Prioridad 4: Valor por defecto (solo para desarrollo local)
-  // En producción sin configuración, esto fallará intencionalmente
-  // para que el usuario sepa que necesita configurar el backend
+  // Priority 4: Default value (only for local development)
+  // In production without configuration, this will intentionally fail
+  // so user knows they need to configure the backend
   return process.env.NODE_ENV === 'production' 
-    ? '' // En producción sin config, retornar vacío para error claro
+    ? '' // In production without config, return empty for clear error
     : 'http://localhost:4000';
 }
 
@@ -86,13 +86,13 @@ async function handleRequest(
   try {
     const backendUrl = getBackendUrl();
     
-    // Si no hay backend configurado en producción, retornar error claro
+    // If no backend configured in production, return clear error
     if (!backendUrl) {
       return NextResponse.json(
         { 
           error: 'Backend not configured',
-          message: 'El backend no está configurado. Por favor configura NEXT_PUBLIC_API_URL o BACKEND_URL en las variables de entorno de Vercel.',
-          hint: 'Si no tienes backend desplegado, esta funcionalidad no estará disponible.'
+          message: 'Backend is not configured. Please configure NEXT_PUBLIC_API_URL or BACKEND_URL in Vercel environment variables.',
+          hint: 'If you don\'t have a backend deployed, this functionality will not be available.'
         },
         { status: 503 }
       );
@@ -101,15 +101,15 @@ async function handleRequest(
     const path = params.path.join('/');
     const url = new URL(path, `${backendUrl}/api/`);
     
-    // Copiar query parameters
+    // Copy query parameters
     request.nextUrl.searchParams.forEach((value, key) => {
       url.searchParams.append(key, value);
     });
 
-    // Preparar headers
+    // Prepare headers
     const headers = new Headers();
     request.headers.forEach((value, key) => {
-      // Excluir headers que no deben pasarse
+      // Exclude headers that should not be passed
       if (
         !key.toLowerCase().startsWith('host') &&
         !key.toLowerCase().startsWith('x-vercel') &&
@@ -119,7 +119,7 @@ async function handleRequest(
       }
     });
 
-    // Preparar body
+    // Prepare body
     let body: string | undefined;
     if (method !== 'GET' && method !== 'DELETE') {
       try {
@@ -129,9 +129,9 @@ async function handleRequest(
       }
     }
 
-    // Hacer la petición al backend con timeout
+    // Make request to backend with timeout
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 segundos
+    const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 seconds
     
     try {
       const response = await fetch(url.toString(), {
@@ -143,7 +143,7 @@ async function handleRequest(
 
       clearTimeout(timeoutId);
 
-      // Copiar respuesta
+      // Copy response
       const data = await response.text();
       let jsonData;
       try {
@@ -163,13 +163,13 @@ async function handleRequest(
     } catch (fetchError: any) {
       clearTimeout(timeoutId);
       
-      // Si es un error de conexión, el backend no está disponible
+      // If it's a connection error, backend is not available
       if (fetchError.name === 'AbortError' || fetchError.message?.includes('fetch failed') || fetchError.message?.includes('ECONNREFUSED')) {
         return NextResponse.json(
           { 
             error: 'Backend not available',
-            message: 'El backend no está disponible. Esta funcionalidad requiere un backend desplegado y configurado.',
-            hint: 'Si no tienes backend desplegado, esta funcionalidad no estará disponible.'
+            message: 'Backend is not available. This functionality requires a deployed and configured backend.',
+            hint: 'If you don\'t have a backend deployed, this functionality will not be available.'
           },
           { status: 503 }
         );
@@ -179,7 +179,7 @@ async function handleRequest(
   } catch (error: any) {
     console.error('Proxy error:', error);
     
-    // Si ya es una respuesta JSON de error, retornarla
+    // If it's already a JSON error response, return it
     if (error.status && error.json) {
       return error;
     }
@@ -187,7 +187,7 @@ async function handleRequest(
     return NextResponse.json(
       { 
         error: 'Proxy error', 
-        message: 'Error al procesar la solicitud. El backend puede no estar disponible.',
+        message: 'Error processing request. Backend may not be available.',
         details: process.env.NODE_ENV === 'development' ? error.message : undefined
       },
       { status: 500 }

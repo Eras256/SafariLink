@@ -5,15 +5,13 @@ import { useAppKit } from '@reown/appkit/react';
 import { Button } from '@/components/ui/button';
 import { truncateAddress } from '@/lib/utils';
 import { useEffect, useState } from 'react';
-import { getApiEndpoint } from '@/lib/api/config';
-import { API_ENDPOINTS } from '@/lib/constants';
 
-// Componente interno que usa los hooks de wagmi
-// Solo se renderiza cuando el provider está disponible
+// Inner component that uses wagmi hooks
+// Only renders when provider is available
 function WalletConnectInner() {
-  // Verificar que el provider esté disponible usando useConfig
-  // Si no está disponible, esto lanzará un error
-  useConfig(); // Esto verificará que el provider esté disponible
+  // Verify that provider is available using useConfig
+  // If not available, this will throw an error
+  useConfig(); // This will verify that the provider is available
   
   const { address, isConnected } = useAccount();
   const { disconnect } = useDisconnect();
@@ -59,7 +57,8 @@ function WalletConnectInner() {
       }
 
       try {
-        const syncUrl = getApiEndpoint(API_ENDPOINTS.TALENT_PROTOCOL.SYNC_ADDRESS);
+        // Use direct Next.js endpoint (without proxy/backend)
+        const syncUrl = '/api/talent-protocol/sync-address';
         const response = await fetch(syncUrl, {
           method: 'POST',
           headers: {
@@ -132,19 +131,19 @@ function WalletConnectInner() {
   );
 }
 
-// Componente wrapper que espera a que el componente esté montado en el cliente
-// y que el WagmiProvider esté disponible
+// Wrapper component that waits for component to be mounted on client
+// and for WagmiProvider to be available
 export function WalletConnect() {
   const [mounted, setMounted] = useState(false);
   const [providerReady, setProviderReady] = useState(false);
 
   useEffect(() => {
-    // Solo renderizar después de que el componente esté montado en el cliente
-    // Esto asegura que el provider esté disponible
+    // Only render after component is mounted on client
+    // This ensures the provider is available
     setMounted(true);
     
-    // Esperar un poco más para asegurarse de que el provider esté montado
-    // Esto es necesario durante la hidratación
+    // Wait a bit more to ensure provider is mounted
+    // This is necessary during hydration
     const timer = setTimeout(() => {
       setProviderReady(true);
     }, 100);
@@ -152,7 +151,7 @@ export function WalletConnect() {
     return () => clearTimeout(timer);
   }, []);
 
-  // En el servidor o antes del mount, mostrar estado de carga
+  // On server or before mount, show loading state
   if (!mounted || !providerReady) {
     return (
       <Button disabled className="glassmorphic-button text-xs sm:text-sm px-3 sm:px-4">
@@ -162,7 +161,7 @@ export function WalletConnect() {
     );
   }
 
-  // Renderizar el componente interno que usa los hooks de wagmi
-  // El provider debe estar disponible en este punto
+  // Render inner component that uses wagmi hooks
+  // Provider must be available at this point
   return <WalletConnectInner />;
 }

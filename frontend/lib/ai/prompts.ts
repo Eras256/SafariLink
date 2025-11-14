@@ -1,6 +1,6 @@
 /**
- * Utilidades para generar prompts del sistema
- * Compatible con el servicio mentor_bot
+ * Utilities for generating system prompts
+ * Compatible with mentor_bot service
  */
 
 export function getSystemPrompt(language: string = 'en'): string {

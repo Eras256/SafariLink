@@ -1,6 +1,6 @@
 /**
- * Generación de recursos sugeridos basados en la pregunta
- * Compatible con el servicio mentor_bot
+ * Generation of suggested resources based on the question
+ * Compatible with mentor_bot service
  */
 
 export interface Resource {

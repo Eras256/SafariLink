@@ -1,6 +1,6 @@
 /**
- * Generación de preguntas relacionadas
- * Compatible con el servicio mentor_bot
+ * Generation of related questions
+ * Compatible with mentor_bot service
  */
 
 const questionsEn = {

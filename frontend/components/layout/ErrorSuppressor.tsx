@@ -53,7 +53,7 @@ export function ErrorSuppressor() {
         'net::ERR_FAILED',
       ];
       
-      // Suprimir errores 503 del proxy (verificar antes de otros patrones)
+      // Suppress 503 errors from proxy (check before other patterns)
       if (
         (errorString.includes('503') || errorString.includes('Service Unavailable')) && 
         (errorString.includes('api/proxy') || 
@@ -61,7 +61,7 @@ export function ErrorSuppressor() {
          errorString.includes('talent-protocol') ||
          errorString.includes('hackathons'))
       ) {
-        return true; // Suprimir este error
+        return true; // Suppress this error
       }
 
       // If it's an extension error, suppress it
@@ -73,7 +73,7 @@ export function ErrorSuppressor() {
     // Override console.error to filter extension errors and proxy 503 errors
     window.console.error = (...args: any[]) => {
       const errorString = args.map(arg => {
-        // Convertir objetos a string para buscar patrones
+        // Convert objects to string to search for patterns
         if (typeof arg === 'object' && arg !== null) {
           try {
             return JSON.stringify(arg);
@@ -84,7 +84,7 @@ export function ErrorSuppressor() {
         return String(arg);
       }).join(' ');
       
-      // Suprimir errores 503 del proxy (múltiples patrones)
+      // Suppress 503 errors from proxy (multiple patterns)
       if (
         (errorString.includes('503') || errorString.includes('Service Unavailable')) && 
         (errorString.includes('api/proxy') || 
@@ -93,10 +93,10 @@ export function ErrorSuppressor() {
          errorString.includes('hackathons') ||
          errorString.includes('window.fetch'))
       ) {
-        return; // No mostrar el error
+        return; // Don't show the error
       }
       
-      // Luego filtrar errores de extensiones
+      // Then filter extension errors
       if (!filterExtensionErrors(args) && originalErrorRef.current) {
         originalErrorRef.current(...args);
       }
@@ -110,35 +110,35 @@ export function ErrorSuppressor() {
     };
 
     // Also handle unhandled promise rejections from extensions and Base Account SDK
-    // Interceptar errores de fetch que devuelven 503
-    // IMPORTANTE: Usar .bind(window) para preservar el contexto y evitar "Illegal invocation"
+    // Intercept fetch errors that return 503
+    // IMPORTANT: Use .bind(window) to preserve context and avoid "Illegal invocation"
     originalFetchRef.current = window.fetch.bind(window);
     
     window.fetch = async (...args) => {
       try {
-        // Llamar al fetch original con el contexto correcto
+        // Call original fetch with correct context
         const response = await originalFetchRef.current!(...args);
         
-        // Si es un 503 del proxy, no registrar como error
+        // If it's a 503 from proxy, don't log as error
         if (response.status === 503) {
           const url = args[0]?.toString() || '';
           if (url.includes('/api/proxy/')) {
-            // Silenciosamente manejar el 503 sin registrar error
-            // El navegador aún puede mostrar el 503 en la consola de red, pero no como error
+            // Silently handle 503 without logging error
+            // Browser may still show 503 in network console, but not as error
             return response;
           }
         }
         
         return response;
       } catch (error: any) {
-        // Suprimir errores de red relacionados con el proxy
+        // Suppress network errors related to proxy
         const url = args[0]?.toString() || '';
         if (url.includes('/api/proxy/')) {
-          // Crear una respuesta 503 simulada para que el código la maneje
+          // Create a simulated 503 response for code to handle
           return new Response(
             JSON.stringify({
               error: 'Backend not available',
-              message: 'El backend no está disponible.',
+              message: 'The backend is not available.',
             }),
             {
               status: 503,
@@ -175,7 +175,7 @@ export function ErrorSuppressor() {
         errorString.includes('The strategy could not generate a response') ||
         errorString.includes('Failed to fetch') ||
         (errorString.includes('500') && errorString.includes('Internal Server Error')) ||
-        // Suprimir errores 503 del proxy
+        // Suppress 503 errors from proxy
         (errorString.includes('503') && (errorString.includes('api/proxy') || errorString.includes('Service Unavailable')))
       ) {
         event.preventDefault();
@@ -200,7 +200,7 @@ export function ErrorSuppressor() {
         errorString.includes('localhost:4000') ||
         errorString.includes('localhost:8000') ||
         (errorString.includes('500') && errorString.includes('Internal Server Error')) ||
-        // Suprimir errores 503 del proxy (backend no disponible)
+        // Suppress 503 errors from proxy (backend not available)
         (targetString.includes('api/proxy') && targetString.includes('503')) ||
         errorString.includes('503') && (errorString.includes('api/proxy') || errorString.includes('Service Unavailable'))
       ) {
@@ -241,7 +241,7 @@ export function ErrorSuppressor() {
         logString.includes('ERR_CONNECTION_REFUSED') ||
         logString.includes('net::ERR_CONNECTION_REFUSED') ||
         (logString.includes('500') && logString.includes('Internal Server Error')) ||
-        // Suprimir logs de errores 503 del proxy
+        // Suppress 503 error logs from proxy
         (logString.includes('503') && (logString.includes('api/proxy') || logString.includes('Service Unavailable')))
       ) {
         return; // Suppress this log

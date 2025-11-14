@@ -1,6 +1,6 @@
 /**
- * Endpoint /api/ask - Compatible con el servicio externo mentor_bot
- * Usa Gemini directamente desde Next.js (server-side)
+ * Endpoint /api/ask - Compatible with external mentor_bot service
+ * Uses Gemini directly from Next.js (server-side)
  * POST /api/ask
  */
 
@@ -10,7 +10,7 @@ import { getSystemPrompt } from '@/lib/ai/prompts';
 import { generateResources } from '@/lib/ai/resources';
 import { generateRelatedQuestions } from '@/lib/ai/related-questions';
 
-// CRÍTICO: Fuerza runtime Node.js (no Edge Runtime)
+// CRITICAL: Force Node.js runtime (not Edge Runtime)
 export const runtime = 'nodejs';
 
 interface AskRequest {
@@ -33,7 +33,7 @@ export async function POST(request: NextRequest) {
     const body: AskRequest = await request.json();
     const { question, context = {}, conversationHistory = [], language = 'en' } = body;
 
-    // Validar que el prompt esté presente
+    // Validate that question is present
     if (!question || typeof question !== 'string') {
       return NextResponse.json(
         {
@@ -55,7 +55,7 @@ export async function POST(request: NextRequest) {
     // Determine language
     const lang = language || 'en';
     
-    // Get system prompt (necesitamos crear esta función)
+    // Get system prompt
     const systemPrompt = getSystemPrompt(lang);
 
     // Add language instruction to question if needed

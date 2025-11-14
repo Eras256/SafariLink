@@ -1,12 +1,12 @@
 /**
- * Endpoint principal para llamadas a Gemini AI
+ * Main endpoint for Gemini AI calls
  * POST /api/ai
  * 
  * Body:
  * {
- *   "prompt": "Tu prompt aquí",
- *   "extractJson": false, // opcional, default false
- *   "config": { // opcional
+ *   "prompt": "Your prompt here",
+ *   "extractJson": false, // optional, default false
+ *   "config": { // optional
  *     "temperature": 0.7,
  *     "topP": 0.9,
  *     "topK": 40,
@@ -18,7 +18,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { callGemini, GeminiConfig } from '@/lib/ai/gemini-advanced';
 
-// CRÍTICO: Fuerza runtime Node.js (no Edge Runtime)
+// CRITICAL: Force Node.js runtime (not Edge Runtime)
 export const runtime = 'nodejs';
 
 export async function POST(request: NextRequest) {
@@ -26,7 +26,7 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const { prompt, extractJson = false, config = {} } = body;
 
-    // Validar que el prompt esté presente
+    // Validate that prompt is present
     if (!prompt || typeof prompt !== 'string') {
       return NextResponse.json(
         {
@@ -37,7 +37,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Validar configuración si se proporciona
+    // Validate configuration if provided
     const validatedConfig: GeminiConfig = {};
     if (config.temperature !== undefined) {
       validatedConfig.temperature = Math.max(0, Math.min(2, config.temperature));
@@ -52,7 +52,7 @@ export async function POST(request: NextRequest) {
       validatedConfig.maxOutputTokens = Math.max(1, Math.min(8192, config.maxOutputTokens));
     }
 
-    // Llamar a Gemini
+    // Call Gemini
     const result = await callGemini(prompt, validatedConfig, extractJson);
 
     if (result.success) {
@@ -75,7 +75,7 @@ export async function POST(request: NextRequest) {
       );
     }
   } catch (error: any) {
-    console.error('[API] Error en /api/ai:', error);
+    console.error('[API] Error in /api/ai:', error);
     return NextResponse.json(
       {
         success: false,

@@ -1,21 +1,21 @@
 /**
- * Helper avanzado para integración con Google Gemini AI
- * Implementa fallback multi-modelo, extracción de JSON, y manejo robusto de errores
+ * Advanced helper for Google Gemini AI integration
+ * Implements multi-model fallback, JSON extraction, and robust error handling
  */
 
 import { GoogleGenerativeAI } from '@google/generative-ai';
 
-// Validar que la API key esté configurada
+// Validate that API key is configured
 if (!process.env.GEMINI_API_KEY) {
   console.error('[AI] GEMINI_API_KEY is not set');
 }
 
-// Instancia única de GoogleGenerativeAI
+// Single instance of GoogleGenerativeAI
 const genAI = process.env.GEMINI_API_KEY
   ? new GoogleGenerativeAI(process.env.GEMINI_API_KEY)
   : null;
 
-// Orden de fallback de modelos
+// Model fallback order
 const modelsToTry = [
   'gemini-2.5-flash',
   'gemini-2.0-flash',
@@ -40,7 +40,7 @@ export interface GeminiResponse<T = any> {
 }
 
 /**
- * Configuración por defecto optimizada para generación
+ * Default configuration optimized for generation
  */
 const defaultConfig: Required<GeminiConfig> = {
   temperature: 0.7,
@@ -50,12 +50,12 @@ const defaultConfig: Required<GeminiConfig> = {
 };
 
 /**
- * Llama a Gemini AI con fallback multi-modelo
+ * Calls Gemini AI with multi-model fallback
  * 
- * @param prompt - El prompt a enviar al modelo
- * @param config - Configuración de generación (opcional)
- * @param extractJson - Si true, intenta extraer JSON de la respuesta
- * @returns Respuesta con success, data, modelUsed y error si aplica
+ * @param prompt - The prompt to send to the model
+ * @param config - Generation configuration (optional)
+ * @param extractJson - If true, attempts to extract JSON from response
+ * @returns Response with success, data, modelUsed and error if applicable
  */
 export async function callGemini(
   prompt: string,
@@ -71,7 +71,7 @@ export async function callGemini(
     };
   }
 
-  // Combinar configuración con valores por defecto
+  // Combine configuration with default values
   const generationConfig = {
     ...defaultConfig,
     ...config,
@@ -81,10 +81,10 @@ export async function callGemini(
   let modelUsed: string | undefined;
   let lastError: Error | null = null;
 
-  // Intentar cada modelo en orden
+  // Try each model in order
   for (const modelName of modelsToTry) {
     try {
-      console.log(`[AI] Intentando modelo: ${modelName}`);
+      console.log(`[AI] Trying model: ${modelName}`);
       
       const model = genAI.getGenerativeModel({
         model: modelName,
@@ -94,16 +94,16 @@ export async function callGemini(
       result = await model.generateContent(prompt);
       modelUsed = modelName;
       
-      console.log(`[AI] Modelo ${modelName} usado exitosamente`);
+      console.log(`[AI] Model ${modelName} used successfully`);
       break;
     } catch (error: any) {
       lastError = error;
-      console.warn(`[AI] Modelo ${modelName} falló:`, error.message);
+      console.warn(`[AI] Model ${modelName} failed:`, error.message);
       continue;
     }
   }
 
-  // Si todos los modelos fallaron
+  // If all models failed
   if (!result) {
     const error = `All models failed: ${lastError?.message || 'Unknown error'}`;
     console.error(`[AI] ${error}`);
@@ -114,7 +114,7 @@ export async function callGemini(
     };
   }
 
-  // Extraer texto de la respuesta
+  // Extract text from response
   let responseText: string;
   try {
     responseText = result.response.text();
@@ -128,7 +128,7 @@ export async function callGemini(
     };
   }
 
-  // Si se solicita extracción de JSON
+  // If JSON extraction is requested
   if (extractJson) {
     try {
       const jsonData = extractJsonFromResponse(responseText);
@@ -138,7 +138,7 @@ export async function callGemini(
         modelUsed,
       };
     } catch (error: any) {
-      console.error(`[AI] Error extrayendo JSON:`, error.message);
+      console.error(`[AI] Error extracting JSON:`, error.message);
       return {
         success: false,
         error: `Failed to extract JSON: ${error.message}`,
@@ -147,7 +147,7 @@ export async function callGemini(
     }
   }
 
-  // Retornar texto plano
+  // Return plain text
   return {
     success: true,
     data: responseText,
@@ -156,13 +156,13 @@ export async function callGemini(
 }
 
 /**
- * Extrae JSON de una respuesta que puede estar envuelta en markdown
+ * Extracts JSON from a response that may be wrapped in markdown
  * 
- * @param responseText - Texto de la respuesta
- * @returns Objeto JSON parseado
+ * @param responseText - Response text
+ * @returns Parsed JSON object
  */
 function extractJsonFromResponse(responseText: string): any {
-  // Buscar JSON en el texto (puede estar en bloques de código markdown)
+  // Search for JSON in text (may be in markdown code blocks)
   const jsonPattern = /\{[\s\S]*\}/;
   const match = responseText.match(jsonPattern);
 
@@ -180,12 +180,12 @@ function extractJsonFromResponse(responseText: string): any {
 }
 
 /**
- * Prueba la conexión con Gemini AI
+ * Tests connection with Gemini AI
  * 
- * @returns Respuesta con el estado de la conexión
+ * @returns Response with connection status
  */
 export async function testGeminiConnection(): Promise<GeminiResponse> {
-  const testPrompt = 'Responde con un JSON simple: {"status": "ok", "message": "Conexión exitosa"}';
+  const testPrompt = 'Respond with a simple JSON: {"status": "ok", "message": "Connection successful"}';
   
   return callGemini(
     testPrompt,
@@ -193,7 +193,7 @@ export async function testGeminiConnection(): Promise<GeminiResponse> {
       temperature: 0.4,
       maxOutputTokens: 256,
     },
-    true // Extraer JSON
+    true // Extract JSON
   );
 }
 

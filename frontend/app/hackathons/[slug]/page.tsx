@@ -480,21 +480,21 @@ function HackathonContentInner({ slug }: { slug: string }) {
           {activeTab === 'feedback' && (
             <div className="space-y-6">
               <div className="glassmorphic p-6 rounded-lg">
-                <h2 className="text-2xl font-bold text-white mb-4">Feedback en Tiempo Real</h2>
+                <h2 className="text-2xl font-bold text-white mb-4">Real-Time Feedback</h2>
                 <p className="text-white/80 mb-6">
-                  Los mentores y jueces pueden dar feedback inmediato durante el desarrollo del proyecto.
-                  Los comentarios son públicos y se actualizan en tiempo real.
+                  Mentors and judges can provide immediate feedback during project development.
+                  Comments are public and update in real-time.
                 </p>
                 
                 {/* Project Selector */}
                 {loadingProjects ? (
                   <div className="bg-white/5 rounded-lg p-4 mb-4">
-                    <p className="text-white/60 text-sm">Cargando proyectos...</p>
+                    <p className="text-white/60 text-sm">Loading projects...</p>
                   </div>
                 ) : projects.length > 0 ? (
                   <div className="bg-white/5 rounded-lg p-4 mb-4">
                     <label className="block text-white/80 text-sm font-medium mb-2">
-                      Selecciona un proyecto para ver su feedback:
+                      Select a project to view its feedback:
                     </label>
                     <select
                       value={selectedProjectId || ''}
