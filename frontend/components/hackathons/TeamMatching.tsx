@@ -789,7 +789,7 @@ export function TeamMatching({ hackathonId, userId }: TeamMatchingProps) {
             {matches.length === 0 ? (
               <div className="glassmorphic p-8 rounded-lg text-center">
                 <MessageSquare className="w-16 h-16 text-white/40 mx-auto mb-4" />
-                <p className="text-white/60">You don't have any matches yet. Search for matches to find teammates.</p>
+                <p className="text-white/60">You don&apos;t have any matches yet. Search for matches to find teammates.</p>
               </div>
             ) : (
               matches.map((match) => {

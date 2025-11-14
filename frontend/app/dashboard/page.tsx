@@ -406,7 +406,7 @@ function DashboardContentInner() {
                 {hackathons.length === 0 ? (
                   <div className="glassmorphic p-12 text-center">
                     <BarChart3 className="w-16 h-16 text-white/40 mx-auto mb-4" />
-                    <h3 className="text-xl font-semibold text-white mb-2">You don't have any hackathons yet</h3>
+                    <h3 className="text-xl font-semibold text-white mb-2">You don&apos;t have any hackathons yet</h3>
                     <p className="text-white/60 mb-6">
                       Create your first hackathon to start managing events
                     </p>
