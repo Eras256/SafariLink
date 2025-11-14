@@ -20,12 +20,12 @@ export function usePrizeDistributor(chainId: number) {
     hash,
   });
 
-  const distributePrizes = (winners: Address[], amounts: bigint[]) => {
+  const distributePrizes = (hackathonId: bigint, winners: Address[], amounts: bigint[]) => {
     writeContract({
       address,
       abi: PRIZE_DISTRIBUTOR_ABI,
       functionName: 'setPrizes',
-      args: [0n, winners, amounts], // TODO: Pass hackathonId
+      args: [hackathonId, winners, amounts],
     });
   };
 

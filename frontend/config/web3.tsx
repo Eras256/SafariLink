@@ -1,6 +1,6 @@
 import { cookieStorage, createStorage } from 'wagmi';
 import { WagmiAdapter } from '@reown/appkit-adapter-wagmi';
-import { arbitrumSepolia, baseSepolia, optimismSepolia } from 'wagmi/chains';
+import { sepolia, arbitrumSepolia, baseSepolia, optimismSepolia } from 'wagmi/chains';
 
 // Get projectId from https://dashboard.reown.com
 // Fallback para desarrollo - usar variable de entorno en producción
@@ -19,7 +19,7 @@ if (!projectId) {
   console.warn('Project ID is not defined. Some wallet features may not work correctly.');
 }
 
-export const networks = [arbitrumSepolia, baseSepolia, optimismSepolia];
+export const networks = [sepolia, arbitrumSepolia, baseSepolia, optimismSepolia];
 
 // Lazy initialization of WagmiAdapter to avoid SSR issues and COOP checks
 let _wagmiAdapter: WagmiAdapter | null = null;
