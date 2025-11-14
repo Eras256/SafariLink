@@ -181,7 +181,7 @@ export function Gamification({ hackathonId, userId }: GamificationProps) {
             <div className="flex items-center gap-4">
               <div className="text-right">
                 <div className="text-2xl font-bold text-orange-400">+{dailyChallenge.points}</div>
-                <div className="text-white/60 text-xs">puntos</div>
+                <div className="text-white/60 text-xs">points</div>
               </div>
               <Button
                 onClick={() => handleCompleteChallenge(dailyChallenge.id)}
@@ -249,7 +249,7 @@ export function Gamification({ hackathonId, userId }: GamificationProps) {
                       size="sm"
                       className="glassmorphic-button"
                     >
-                      {completingChallenge === challenge.id ? 'Completando...' : 'Completar'}
+                      {completingChallenge === challenge.id ? 'Completing...' : 'Complete'}
                     </Button>
                   )}
                 </div>
@@ -302,13 +302,13 @@ export function Gamification({ hackathonId, userId }: GamificationProps) {
                       </span>
                       {entry.user.id === userId && (
                         <span className="text-xs bg-blue-500/20 text-blue-300 px-2 py-1 rounded">
-                          Tú
+                          You
                         </span>
                       )}
                     </div>
                     <div className="text-white/60 text-sm">
-                      {entry.badgeCount} badges • {entry.projectCount} proyectos •{' '}
-                      {entry.challengeCount} desafíos
+                      {entry.badgeCount} badges • {entry.projectCount} projects •{' '}
+                      {entry.challengeCount} challenges
                     </div>
                   </div>
                 </div>
@@ -316,13 +316,13 @@ export function Gamification({ hackathonId, userId }: GamificationProps) {
                   <div className="text-xl font-bold text-white">
                     {entry.totalScore.toLocaleString()}
                   </div>
-                  <div className="text-white/60 text-xs">puntos</div>
+                  <div className="text-white/60 text-xs">points</div>
                 </div>
               </motion.div>
             ))
           ) : (
             <div className="text-center py-8 text-white/60">
-              No hay participantes en el leaderboard aún
+              No participants on the leaderboard yet
             </div>
           )}
         </div>
@@ -357,7 +357,7 @@ export function Gamification({ hackathonId, userId }: GamificationProps) {
                       <h4 className="text-white font-semibold">{badge.name}</h4>
                       {badge.earned && (
                         <div className="text-xs bg-green-500/20 text-green-300 px-2 py-1 rounded">
-                          Ganado
+                          Earned
                         </div>
                       )}
                     </div>
@@ -387,14 +387,14 @@ export function Gamification({ hackathonId, userId }: GamificationProps) {
                 </div>
                 {badge.earned && badge.earnedAt && (
                   <div className="text-white/40 text-xs">
-                    Ganado {format(new Date(badge.earnedAt), 'dd/MM/yyyy')}
+                    Earned {format(new Date(badge.earnedAt), 'dd/MM/yyyy')}
                   </div>
                 )}
               </motion.div>
             ))
           ) : (
             <div className="col-span-full text-center py-8 text-white/60">
-              No hay badges disponibles aún
+              No badges available yet
             </div>
           )}
         </div>
