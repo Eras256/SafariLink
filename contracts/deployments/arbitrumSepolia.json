@@ -1,0 +1,10 @@
+{
+  "network": "arbitrumSepolia",
+  "chainId": 421614,
+  "deployer": "0xF93F07b1b35b9DF13e2d53DbAd49396f0A9538D9",
+  "contracts": {
+    "NFTCertificate": "0x0D52B60838DDE96984563a1Da84E67a8aaA65DC8",
+    "PrizeDistributor": "0xeC0875Ed411Fce21a5B2205a5114feA468b6dF4B"
+  },
+  "timestamp": "2025-11-14T19:11:28.399Z"
+}

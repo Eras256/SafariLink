@@ -1,0 +1,10 @@
+{
+  "network": "optimismSepolia",
+  "chainId": 11155420,
+  "deployer": "0xF93F07b1b35b9DF13e2d53DbAd49396f0A9538D9",
+  "contracts": {
+    "NFTCertificate": "0x51FBdDcD12704e4FCc28880E22b582362811cCdf",
+    "PrizeDistributor": "0x77Ee7016BB2A3D4470a063DD60746334c6aD84A4"
+  },
+  "timestamp": "2025-11-14T19:07:58.470Z"
+}

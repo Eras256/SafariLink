@@ -1,0 +1,10 @@
+{
+  "network": "baseSepolia",
+  "chainId": 84532,
+  "deployer": "0xF93F07b1b35b9DF13e2d53DbAd49396f0A9538D9",
+  "contracts": {
+    "NFTCertificate": "0xA29b25d84F16a168528eD369032EF3a1351a44EF",
+    "PrizeDistributor": "0xf158BFBe755b2c2a4b4cB16f568a93298e16AE24"
+  },
+  "timestamp": "2025-11-14T18:56:14.310Z"
+}
