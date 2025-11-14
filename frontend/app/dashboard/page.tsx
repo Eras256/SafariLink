@@ -190,8 +190,8 @@ function DashboardContentInner() {
         <div className="flex items-center justify-center min-h-screen pt-32">
           <div className="text-center space-y-4">
             <BarChart3 className="w-16 h-16 text-white/40 mx-auto" />
-            <h1 className="text-2xl font-bold text-white">Conecta tu wallet</h1>
-            <p className="text-white/60">Necesitas conectar tu wallet para acceder al dashboard de organizadores</p>
+            <h1 className="text-2xl font-bold text-white">Connect your wallet</h1>
+            <p className="text-white/60">You need to connect your wallet to access the organizer dashboard</p>
           </div>
         </div>
         <Footer />
@@ -210,10 +210,10 @@ function DashboardContentInner() {
           {/* Header */}
           <div className="mb-8">
             <h1 className="text-4xl md:text-5xl font-bold text-white mb-2">
-              Dashboard de Organizadores
+              Organizer Dashboard
             </h1>
             <p className="text-white/60 text-lg">
-              Gestiona tus hackathons y visualiza métricas en tiempo real
+              Manage your hackathons and view real-time metrics
             </p>
           </div>
 
@@ -222,7 +222,7 @@ function DashboardContentInner() {
               <div>
                 <h2 className="text-xl font-bold text-white">Talent Protocol Identity</h2>
                 <p className="text-white/60 text-sm">
-                  Sincroniza tu reputación on-chain para impulsar tu puntaje de builder.
+                  Sync your on-chain reputation to boost your builder score.
                 </p>
               </div>
               <Button
@@ -341,7 +341,7 @@ function DashboardContentInner() {
 
           {loading ? (
             <div className="flex items-center justify-center h-64">
-              <div className="text-white/60">Cargando dashboard...</div>
+              <div className="text-white/60">Loading dashboard...</div>
             </div>
           ) : (
             <>
@@ -367,7 +367,7 @@ function DashboardContentInner() {
                   >
                     <div className="flex items-center gap-3 mb-2">
                       <Activity className="w-6 h-6 text-green-400" />
-                      <h3 className="text-white/60 text-sm">Activos</h3>
+                      <h3 className="text-white/60 text-sm">Active</h3>
                     </div>
                     <div className="text-3xl font-bold text-white">{(stats?.activeHackathons || 0)}</div>
                   </motion.div>
@@ -380,7 +380,7 @@ function DashboardContentInner() {
                   >
                     <div className="flex items-center gap-3 mb-2">
                       <Users className="w-6 h-6 text-purple-400" />
-                      <h3 className="text-white/60 text-sm">Participantes</h3>
+                      <h3 className="text-white/60 text-sm">Participants</h3>
                     </div>
                     <div className="text-3xl font-bold text-white">{(stats?.totalParticipants || 0).toLocaleString()}</div>
                   </motion.div>
@@ -393,7 +393,7 @@ function DashboardContentInner() {
                   >
                     <div className="flex items-center gap-3 mb-2">
                       <Award className="w-6 h-6 text-orange-400" />
-                      <h3 className="text-white/60 text-sm">Proyectos</h3>
+                      <h3 className="text-white/60 text-sm">Projects</h3>
                     </div>
                     <div className="text-3xl font-bold text-white">{(stats?.totalProjects || 0).toLocaleString()}</div>
                   </motion.div>
@@ -401,18 +401,18 @@ function DashboardContentInner() {
 
               {/* Hackathons List */}
               <div className="space-y-4">
-                <h2 className="text-2xl font-bold text-white mb-4">Mis Hackathons</h2>
+                <h2 className="text-2xl font-bold text-white mb-4">My Hackathons</h2>
                 
                 {hackathons.length === 0 ? (
                   <div className="glassmorphic p-12 text-center">
                     <BarChart3 className="w-16 h-16 text-white/40 mx-auto mb-4" />
-                    <h3 className="text-xl font-semibold text-white mb-2">No tienes hackathons aún</h3>
+                    <h3 className="text-xl font-semibold text-white mb-2">You don't have any hackathons yet</h3>
                     <p className="text-white/60 mb-6">
-                      Crea tu primer hackathon para comenzar a gestionar eventos
+                      Create your first hackathon to start managing events
                     </p>
                     <Link href="/hackathons">
                       <button className="px-6 py-3 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-colors">
-                        Explorar Hackathons
+                        Explore Hackathons
                       </button>
                     </Link>
                   </div>
@@ -480,7 +480,7 @@ function DashboardContentInner() {
                             href={`/hackathons/${hackathon.slug}`}
                             className="flex items-center gap-2 text-blue-400 hover:text-blue-300 transition-colors text-sm font-medium"
                           >
-                            Ver Dashboard
+                            View Dashboard
                             <ArrowRight className="w-4 h-4" />
                           </Link>
                         </div>
@@ -539,7 +539,7 @@ export default function DashboardPage() {
       <NeuralBackground />
       <Navbar />
       <div className="flex items-center justify-center min-h-screen">
-        <div className="text-white/60">Error cargando dashboard. Por favor recarga la página.</div>
+        <div className="text-white/60">Error loading dashboard. Please refresh the page.</div>
       </div>
       <Footer />
     </main>
@@ -553,7 +553,7 @@ export default function DashboardPage() {
         <NeuralBackground />
         <Navbar />
         <div className="flex items-center justify-center min-h-screen">
-          <div className="text-white/60">Cargando...</div>
+          <div className="text-white/60">Loading...</div>
         </div>
         <Footer />
       </main>

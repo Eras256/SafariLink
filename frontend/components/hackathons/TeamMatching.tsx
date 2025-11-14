@@ -311,9 +311,9 @@ export function TeamMatching({ hackathonId, userId }: TeamMatchingProps) {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold text-white mb-2">Team Matching Inteligente</h2>
+          <h2 className="text-2xl font-bold text-white mb-2">Smart Team Matching</h2>
           <p className="text-white/60">
-            Encuentra compañeros de equipo basado en skills complementarios, timezone y preferencias
+            Find team members based on complementary skills, timezone, and preferences
           </p>
         </div>
         {profile && (
@@ -325,12 +325,12 @@ export function TeamMatching({ hackathonId, userId }: TeamMatchingProps) {
             {searching ? (
               <>
                 <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                Buscando...
+                Searching...
               </>
             ) : (
               <>
                 <Search className="w-4 h-4 mr-2" />
-                Buscar Matches
+                Find Matches
               </>
             )}
           </Button>
@@ -347,7 +347,7 @@ export function TeamMatching({ hackathonId, userId }: TeamMatchingProps) {
               : 'border-transparent text-white/60 hover:text-white'
           }`}
         >
-          Mi Perfil
+          My Profile
         </button>
         <button
           onClick={() => setActiveTab('matches')}
@@ -357,7 +357,7 @@ export function TeamMatching({ hackathonId, userId }: TeamMatchingProps) {
               : 'border-transparent text-white/60 hover:text-white'
           }`}
         >
-          Matches Encontrados
+          Found Matches
         </button>
         <button
           onClick={() => setActiveTab('my-matches')}
@@ -367,7 +367,7 @@ export function TeamMatching({ hackathonId, userId }: TeamMatchingProps) {
               : 'border-transparent text-white/60 hover:text-white'
           }`}
         >
-          Mis Matches
+          My Matches
         </button>
       </div>
 
@@ -487,7 +487,7 @@ export function TeamMatching({ hackathonId, userId }: TeamMatchingProps) {
                 <div className="space-y-4">
                   <div>
                     <label className="block text-sm font-medium text-white/80 mb-2">
-                      Skills (separados por comas)
+                      Skills (comma separated)
                     </label>
                     <input
                       type="text"
@@ -498,7 +498,7 @@ export function TeamMatching({ hackathonId, userId }: TeamMatchingProps) {
                           skills: e.target.value.split(',').map((s) => s.trim()).filter(Boolean),
                         })
                       }
-                      placeholder="Ej: Solidity, React, Node.js, DeFi"
+                      placeholder="E.g: Solidity, React, Node.js, DeFi"
                       className="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                     />
                   </div>
@@ -556,16 +556,16 @@ export function TeamMatching({ hackathonId, userId }: TeamMatchingProps) {
                         }
                         className="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                       >
-                        <option value="full-time">Tiempo Completo</option>
-                        <option value="part-time">Tiempo Parcial</option>
-                        <option value="weekend">Fin de Semana</option>
+                        <option value="full-time">Full Time</option>
+                        <option value="part-time">Part Time</option>
+                        <option value="weekend">Weekend</option>
                       </select>
                     </div>
                   </div>
 
                   <div>
                     <label className="block text-sm font-medium text-white/80 mb-2">
-                      GitHub URL (opcional)
+                      GitHub URL (optional)
                     </label>
                     <input
                       type="url"
@@ -582,21 +582,21 @@ export function TeamMatching({ hackathonId, userId }: TeamMatchingProps) {
                       value={formData.bio}
                       onChange={(e) => setFormData({ ...formData, bio: e.target.value })}
                       rows={4}
-                      placeholder="Cuéntanos sobre ti..."
+                      placeholder="Tell us about yourself..."
                       className="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                     />
                   </div>
 
                   <div className="flex gap-4">
                     <Button onClick={saveProfile} className="bg-blue-500 hover:bg-blue-600">
-                      Guardar
+                      Save
                     </Button>
                     <Button
                       onClick={() => setShowProfileForm(false)}
                       variant="outline"
                       className="border-white/20 text-white hover:bg-white/10"
                     >
-                      Cancelar
+                      Cancel
                     </Button>
                   </div>
                 </div>
@@ -610,7 +610,7 @@ export function TeamMatching({ hackathonId, userId }: TeamMatchingProps) {
             {matches.length === 0 ? (
               <div className="glassmorphic p-8 rounded-lg text-center">
                 <Search className="w-16 h-16 text-white/40 mx-auto mb-4" />
-                <p className="text-white/60">No se encontraron matches. Haz clic en &quot;Buscar Matches&quot; para encontrar compañeros.</p>
+                <p className="text-white/60">No matches found. Click &quot;Find Matches&quot; to find teammates.</p>
               </div>
             ) : (
               matches.map((match) => {
@@ -648,7 +648,7 @@ export function TeamMatching({ hackathonId, userId }: TeamMatchingProps) {
                             {candidateUsername}
                           </h4>
                           <p className="text-white/60 text-sm">
-                            Compatibilidad: {(match.matchScore * 100).toFixed(0)}%
+                            Compatibility: {(match.matchScore * 100).toFixed(0)}%
                           </p>
                         </div>
                       </div>
@@ -689,7 +689,7 @@ export function TeamMatching({ hackathonId, userId }: TeamMatchingProps) {
                       <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-4 mb-4">
                         <div className="flex items-center gap-2 mb-2">
                           <Sparkles className="w-4 h-4 text-blue-400" />
-                          <h5 className="text-sm font-semibold text-blue-300">Análisis AI</h5>
+                          <h5 className="text-sm font-semibold text-blue-300">AI Analysis</h5>
                         </div>
                         <p className="text-white/80 text-sm">{match.aiReasoning}</p>
                       </div>
@@ -698,7 +698,7 @@ export function TeamMatching({ hackathonId, userId }: TeamMatchingProps) {
                     {/* Strengths */}
                     {match.strengths && match.strengths.length > 0 && (
                       <div className="mb-4">
-                        <h5 className="text-sm font-semibold text-white/80 mb-2">Fortalezas</h5>
+                        <h5 className="text-sm font-semibold text-white/80 mb-2">Strengths</h5>
                         <div className="flex flex-wrap gap-2">
                           {match.strengths.map((strength, index) => (
                             <span
@@ -747,7 +747,7 @@ export function TeamMatching({ hackathonId, userId }: TeamMatchingProps) {
                           className="bg-green-500 hover:bg-green-600 flex-1"
                         >
                           <Check className="w-4 h-4 mr-2" />
-                          Interesado
+                          Interested
                         </Button>
                         <Button
                           onClick={() => respondToMatch(match.id, 'NOT_INTERESTED')}
@@ -755,7 +755,7 @@ export function TeamMatching({ hackathonId, userId }: TeamMatchingProps) {
                           className="border-red-500/50 text-red-400 hover:bg-red-500/10 flex-1"
                         >
                           <X className="w-4 h-4 mr-2" />
-                          No Interesado
+                          Not Interested
                         </Button>
                       </div>
                     )}
@@ -764,17 +764,17 @@ export function TeamMatching({ hackathonId, userId }: TeamMatchingProps) {
                       <div className="bg-green-500/20 border border-green-500/30 rounded-lg p-4">
                         <div className="flex items-center gap-2 text-green-300">
                           <Check className="w-5 h-5" />
-                          <span className="font-semibold">¡Interés Mutuo!</span>
+                          <span className="font-semibold">Mutual Interest!</span>
                         </div>
                         <p className="text-white/80 text-sm mt-2">
-                          Ambos están interesados. Pueden formar un equipo.
+                          Both are interested. You can form a team.
                         </p>
                       </div>
                     )}
 
                     {userAction === 'NOT_INTERESTED' && (
                       <div className="bg-red-500/20 border border-red-500/30 rounded-lg p-4">
-                        <p className="text-red-300 text-sm">Has marcado este match como no interesado</p>
+                        <p className="text-red-300 text-sm">You have marked this match as not interested</p>
                       </div>
                     )}
                   </motion.div>
@@ -789,7 +789,7 @@ export function TeamMatching({ hackathonId, userId }: TeamMatchingProps) {
             {matches.length === 0 ? (
               <div className="glassmorphic p-8 rounded-lg text-center">
                 <MessageSquare className="w-16 h-16 text-white/40 mx-auto mb-4" />
-                <p className="text-white/60">No tienes matches aún. Busca matches para encontrar compañeros.</p>
+                <p className="text-white/60">You don't have any matches yet. Search for matches to find teammates.</p>
               </div>
             ) : (
               matches.map((match) => {
@@ -810,9 +810,9 @@ export function TeamMatching({ hackathonId, userId }: TeamMatchingProps) {
                           </div>
                         )}
                         <div>
-                          <h4 className="text-white font-medium">{otherUser?.username || 'Usuario'}</h4>
+                          <h4 className="text-white font-medium">{otherUser?.username || 'User'}</h4>
                           <p className="text-white/60 text-sm">
-                            {match.status === 'MUTUAL_INTEREST' ? 'Interés Mutuo' : 'Pendiente'}
+                            {match.status === 'MUTUAL_INTEREST' ? 'Mutual Interest' : 'Pending'}
                           </p>
                         </div>
                       </div>

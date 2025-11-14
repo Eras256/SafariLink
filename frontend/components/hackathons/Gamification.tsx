@@ -37,7 +37,7 @@ export function Gamification({ hackathonId, userId }: GamificationProps) {
       await completeChallenge(challengeId);
     } catch (error: any) {
       console.error('Error completing challenge:', error);
-      alert(error.message || 'Error al completar el desafío');
+      alert(error.message || 'Error completing challenge');
     } finally {
       setCompletingChallenge(null);
     }
@@ -61,13 +61,13 @@ export function Gamification({ hackathonId, userId }: GamificationProps) {
   const getRarityLabel = (rarity: string) => {
     switch (rarity) {
       case 'COMMON':
-        return 'Común';
+        return 'Common';
       case 'RARE':
-        return 'Raro';
+        return 'Rare';
       case 'EPIC':
-        return 'Épico';
+        return 'Epic';
       case 'LEGENDARY':
-        return 'Legendario';
+        return 'Legendary';
       default:
         return rarity;
     }
@@ -76,7 +76,7 @@ export function Gamification({ hackathonId, userId }: GamificationProps) {
   if (loading && !badges.length && !leaderboard.length) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="text-white/60">Cargando gamificación...</div>
+        <div className="text-white/60">Loading gamification...</div>
       </div>
     );
   }
@@ -86,7 +86,7 @@ export function Gamification({ hackathonId, userId }: GamificationProps) {
       <div className="flex flex-col items-center justify-center h-64 space-y-4">
         <div className="text-red-400">Error: {error}</div>
         <Button onClick={refresh} className="glassmorphic-button">
-          Reintentar
+          Retry
         </Button>
       </div>
     );
@@ -107,12 +107,12 @@ export function Gamification({ hackathonId, userId }: GamificationProps) {
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-3">
               <Trophy className="w-6 h-6 text-yellow-400" />
-              <h3 className="text-white font-semibold">Tu Puntuación</h3>
+              <h3 className="text-white font-semibold">Your Score</h3>
             </div>
             <button
               onClick={refresh}
               className="p-2 hover:bg-white/10 rounded-lg transition-colors"
-              title="Actualizar"
+              title="Refresh"
             >
               <RefreshCw className="w-4 h-4 text-white/60" />
             </button>
@@ -121,7 +121,7 @@ export function Gamification({ hackathonId, userId }: GamificationProps) {
             {userStats?.totalScore.toLocaleString() || 0}
           </div>
           <div className="text-white/60 text-sm">
-            {userStats?.rank ? `Rank #${userStats.rank}` : 'Sin ranking aún'}
+            {userStats?.rank ? `Rank #${userStats.rank}` : 'No ranking yet'}
           </div>
         </motion.div>
 
@@ -133,12 +133,12 @@ export function Gamification({ hackathonId, userId }: GamificationProps) {
         >
           <div className="flex items-center gap-3 mb-4">
             <Award className="w-6 h-6 text-purple-400" />
-            <h3 className="text-white font-semibold">Badges Ganados</h3>
+            <h3 className="text-white font-semibold">Badges Earned</h3>
           </div>
           <div className="text-3xl font-bold text-white mb-2">
             {earnedBadges.length}/{badges.length}
           </div>
-          <div className="text-white/60 text-sm">¡Sigue así!</div>
+            <div className="text-white/60 text-sm">Keep it up!</div>
         </motion.div>
 
         <motion.div
@@ -149,14 +149,14 @@ export function Gamification({ hackathonId, userId }: GamificationProps) {
         >
           <div className="flex items-center gap-3 mb-4">
             <TrendingUp className="w-6 h-6 text-green-400" />
-            <h3 className="text-white font-semibold">Progreso</h3>
+            <h3 className="text-white font-semibold">Progress</h3>
           </div>
           <div className="text-3xl font-bold text-white mb-2">
             {badges.length > 0
               ? Math.round((earnedBadges.length / badges.length) * 100)
               : 0}%
           </div>
-          <div className="text-white/60 text-sm">Completa todos los badges</div>
+            <div className="text-white/60 text-sm">Complete all badges</div>
         </motion.div>
       </div>
 
@@ -174,7 +174,7 @@ export function Gamification({ hackathonId, userId }: GamificationProps) {
                 <h3 className="text-white font-semibold">{dailyChallenge.title}</h3>
                 <p className="text-white/70 text-sm">{dailyChallenge.description}</p>
                 <p className="text-white/50 text-xs mt-1">
-                  Válido hasta: {format(new Date(dailyChallenge.endDate), 'dd/MM/yyyy HH:mm')}
+                  Valid until: {format(new Date(dailyChallenge.endDate), 'dd/MM/yyyy HH:mm')}
                 </p>
               </div>
             </div>
@@ -193,10 +193,10 @@ export function Gamification({ hackathonId, userId }: GamificationProps) {
                 }
               >
                 {completingChallenge === dailyChallenge.id
-                  ? 'Completando...'
+                  ? 'Completing...'
                   : dailyChallenge.completed
-                  ? 'Completado ✓'
-                  : 'Completar Desafío'}
+                  ? 'Completed ✓'
+                  : 'Complete Challenge'}
               </Button>
             </div>
           </div>
@@ -212,7 +212,7 @@ export function Gamification({ hackathonId, userId }: GamificationProps) {
         >
           <div className="flex items-center gap-2 mb-6">
             <Target className="w-6 h-6 text-blue-400" />
-            <h3 className="text-2xl font-semibold text-white">Desafíos Disponibles</h3>
+            <h3 className="text-2xl font-semibold text-white">Available Challenges</h3>
           </div>
           <div className="space-y-3">
             {challenges.map((challenge) => (
@@ -227,7 +227,7 @@ export function Gamification({ hackathonId, userId }: GamificationProps) {
                     <h4 className="text-white font-semibold">{challenge.title}</h4>
                     {challenge.completed && (
                       <span className="text-xs bg-green-500/20 text-green-300 px-2 py-1 rounded">
-                        Completado
+                        Completed
                       </span>
                     )}
                   </div>
@@ -240,7 +240,7 @@ export function Gamification({ hackathonId, userId }: GamificationProps) {
                 <div className="flex items-center gap-4">
                   <div className="text-right">
                     <div className="text-xl font-bold text-orange-400">+{challenge.points}</div>
-                    <div className="text-white/60 text-xs">puntos</div>
+                    <div className="text-white/60 text-xs">points</div>
                   </div>
                   {!challenge.completed && (
                     <Button

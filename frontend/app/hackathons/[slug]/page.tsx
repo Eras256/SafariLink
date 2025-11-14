@@ -423,7 +423,7 @@ function HackathonContentInner({ slug }: { slug: string }) {
               <div className="glassmorphic p-6 rounded-lg">
                 <h2 className="text-2xl font-bold text-white mb-4">Virtual Networking</h2>
                 <p className="text-white/80 mb-6">
-                  Únete a salas de networking por track, chatea en tiempo real y colabora con otros participantes.
+                  Join track-based networking rooms, chat in real-time and collaborate with other participants.
                 </p>
                 <div style={{ height: '600px', minHeight: '600px' }}>
                   <VirtualNetworking hackathonId={hackathon.id} userId={address} />
@@ -437,8 +437,8 @@ function HackathonContentInner({ slug }: { slug: string }) {
               <div className="glassmorphic p-6 rounded-lg">
                 <h2 className="text-2xl font-bold text-white mb-4">AI Mentor</h2>
                 <p className="text-white/80 mb-6">
-                  Asistente AI 24/7 que responde en Swahili, Inglés y Francés. Obtén ayuda con desarrollo Web3,
-                  ejemplos de código y guías contextuales.
+                  24/7 AI assistant that responds in Swahili, English and French. Get help with Web3 development,
+                  code examples and contextual guides.
                 </p>
                 <div style={{ height: '700px', minHeight: '700px' }}>
                   <AIMentor
@@ -458,10 +458,10 @@ function HackathonContentInner({ slug }: { slug: string }) {
           {activeTab === 'team-matching' && (
             <div className="space-y-6">
               <div className="glassmorphic p-6 rounded-lg">
-                <h2 className="text-2xl font-bold text-white mb-4">Team Matching Inteligente</h2>
+                <h2 className="text-2xl font-bold text-white mb-4">Smart Team Matching</h2>
                 <p className="text-white/80 mb-6">
-                  AI que conecta participantes basado en skills complementarios, timezone y preferencias.
-                  Análisis de GitHub incluido.
+                  AI that connects participants based on complementary skills, timezone and preferences.
+                  GitHub analysis included.
                 </p>
                 <TeamMatching hackathonId={hackathon.id} userId={address} />
               </div>
@@ -511,7 +511,7 @@ function HackathonContentInner({ slug }: { slug: string }) {
                 ) : (
                   <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-lg p-4 mb-4">
                     <p className="text-yellow-400 text-sm">
-                      <strong>No hay proyectos disponibles aún.</strong> Los proyectos aparecerán aquí una vez que los participantes los envíen.
+                      <strong>No projects available yet.</strong> Projects will appear here once participants submit them.
                     </p>
                   </div>
                 )}
@@ -528,7 +528,7 @@ function HackathonContentInner({ slug }: { slug: string }) {
                 ) : hackathon && !selectedProjectId && projects.length === 0 ? (
                   <div className="bg-white/5 rounded-lg p-8 text-center">
                     <p className="text-white/60">
-                      Selecciona un proyecto o espera a que se envíen proyectos para ver feedback.
+                      Select a project or wait for projects to be submitted to view feedback.
                     </p>
                   </div>
                 ) : null}
