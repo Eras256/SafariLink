@@ -27,6 +27,7 @@ import { format } from 'date-fns';
 import { Button } from '@/components/ui/button';
 import { TalentProtocolBadge } from '@/components/profile/TalentProtocolBadge';
 import { useTalentProtocol } from '@/hooks/useTalentProtocol';
+import { NFTCertificates } from '@/components/hackathons/NFTCertificates';
 
 interface Hackathon {
   id: string;
@@ -398,6 +399,12 @@ function DashboardContentInner() {
                     <div className="text-3xl font-bold text-white">{(stats?.totalProjects || 0).toLocaleString()}</div>
                   </motion.div>
                 </div>
+
+              {/* NFT Certificates */}
+              <div className="mb-8">
+                <h2 className="text-2xl font-bold text-white mb-4">Mis Certificados NFT</h2>
+                <NFTCertificates userId={address} />
+              </div>
 
               {/* Hackathons List */}
               <div className="space-y-4">

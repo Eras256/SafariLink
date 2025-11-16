@@ -5,6 +5,8 @@ import { motion } from 'framer-motion';
 import { Trophy, Award, Star, Zap, Target, TrendingUp, Flame, Crown, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useGamification } from '@/hooks/useGamification';
+import { useNFTCertificate } from '@/hooks/useNFTCertificate';
+import { useAccount } from 'wagmi';
 import { format } from 'date-fns';
 
 interface GamificationProps {
@@ -13,6 +15,7 @@ interface GamificationProps {
 }
 
 export function Gamification({ hackathonId, userId }: GamificationProps) {
+  const { address } = useAccount();
   const {
     badges,
     leaderboard,
@@ -29,12 +32,40 @@ export function Gamification({ hackathonId, userId }: GamificationProps) {
     enabled: !!hackathonId,
   });
 
+  const nftCertificate = useNFTCertificate();
   const [completingChallenge, setCompletingChallenge] = useState<string | null>(null);
+  const [mintingBadge, setMintingBadge] = useState<string | null>(null);
 
   const handleCompleteChallenge = async (challengeId: string) => {
     try {
       setCompletingChallenge(challengeId);
       await completeChallenge(challengeId);
+      
+      // Check if any badges were earned and mint them
+      await checkBadges();
+      const earnedBadges = badges.filter(b => b.earned && !b.nftTokenId);
+      
+      // Mint NFT badges for newly earned badges
+      if (earnedBadges.length > 0 && address && nftCertificate.isSupported) {
+        for (const badge of earnedBadges) {
+          try {
+            setMintingBadge(badge.id);
+            nftCertificate.mintBadge(
+              address,
+              BigInt(hackathonId),
+              'Hackathon', // TODO: Get actual hackathon name
+              badge.name,
+              badge.rarity || 'COMMON'
+            );
+            // Wait for transaction to complete
+            await new Promise(resolve => setTimeout(resolve, 3000));
+          } catch (error) {
+            console.error(`Error minting badge ${badge.id}:`, error);
+          } finally {
+            setMintingBadge(null);
+          }
+        }
+      }
     } catch (error: any) {
       console.error('Error completing challenge:', error);
       alert(error.message || 'Error completing challenge');
@@ -380,6 +411,11 @@ export function Gamification({ hackathonId, userId }: GamificationProps) {
                       {badge.nftTokenId && (
                         <span className="text-xs bg-purple-500/20 text-purple-300 px-2 py-1 rounded">
                           NFT #{badge.nftTokenId}
+                        </span>
+                      )}
+                      {badge.earned && !badge.nftTokenId && nftCertificate.isSupported && address && (
+                        <span className="text-xs bg-yellow-500/20 text-yellow-300 px-2 py-1 rounded">
+                          {mintingBadge === badge.id ? 'Minting...' : 'Mint NFT'}
                         </span>
                       )}
                     </div>

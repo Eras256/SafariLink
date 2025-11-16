@@ -14,6 +14,9 @@ import { Gamification } from '@/components/hackathons/Gamification';
 import { OrganizerDashboard } from '@/components/hackathons/OrganizerDashboard';
 import { AIMentor } from '@/components/hackathons/AIMentor';
 import { TeamMatching } from '@/components/hackathons/TeamMatching';
+import { PrizeClaiming } from '@/components/hackathons/PrizeClaiming';
+import { NFTCertificates } from '@/components/hackathons/NFTCertificates';
+import { PrizeDistribution } from '@/components/hackathons/PrizeDistribution';
 import { useAccount } from 'wagmi';
 import { motion } from 'framer-motion';
 import { Users, Calendar, MapPin, Trophy, Code, MessageSquare, Video, Award } from 'lucide-react';
@@ -542,6 +545,14 @@ function HackathonContentInner({ slug }: { slug: string }) {
                 <h2 className="text-2xl font-bold text-white mb-4">Leaderboard</h2>
                 <Gamification hackathonId={hackathon.id} userId={address} />
               </div>
+              <div className="glassmorphic p-6 rounded-lg">
+                <h2 className="text-2xl font-bold text-white mb-4">Certificados NFT</h2>
+                <NFTCertificates hackathonId={hackathon.id} userId={address} />
+              </div>
+              <div className="glassmorphic p-6 rounded-lg">
+                <h2 className="text-2xl font-bold text-white mb-4">Reclamar Premio</h2>
+                <PrizeClaiming hackathonId={hackathon.id} />
+              </div>
             </div>
           )}
         </div>
@@ -550,8 +561,12 @@ function HackathonContentInner({ slug }: { slug: string }) {
       {/* Organizer Dashboard (if organizer) */}
       {isOrganizer && hackathon && (
         <section className="px-4 pb-20">
-          <div className="max-w-7xl mx-auto">
+          <div className="max-w-7xl mx-auto space-y-6">
             <OrganizerDashboard hackathonId={hackathon.id} />
+            <div className="glassmorphic p-6 rounded-lg">
+              <h2 className="text-2xl font-bold text-white mb-4">Distribuir Premios</h2>
+              <PrizeDistribution hackathonId={hackathon.id} />
+            </div>
           </div>
         </section>
       )}

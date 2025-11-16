@@ -31,6 +31,7 @@ import {
 import { useDashboardMetrics } from '@/hooks/useDashboardMetrics';
 import { useAccount } from 'wagmi';
 import { format } from 'date-fns';
+import { PrizeDistribution } from './PrizeDistribution';
 
 interface OrganizerDashboardProps {
   hackathonId: string;
