@@ -13,7 +13,7 @@ const cleanProjectId = (id: string | undefined): string => {
 export const projectId = cleanProjectId(
   process.env.NEXT_PUBLIC_REOWN_PROJECT_ID || 
   process.env.NEXT_PUBLIC_PROJECT_ID
-) || 'your_reown_project_id_here'; // Fallback para desarrollo
+) || ''; // Must be provided via environment variable
 
 if (!projectId) {
   console.warn('Project ID is not defined. Some wallet features may not work correctly.');

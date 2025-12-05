@@ -86,8 +86,11 @@ function generateImageUrl(keywords: string, width = 800, height = 600): string {
  * Uses Unsplash API with proper format for direct image URLs
  */
 function generateUnsplashImage(keywords: string, width = 800, height = 600): string {
-  // Access Key: your_unsplash_access_key_here
-  const unsplashKey = process.env.NEXT_PUBLIC_UNSPLASH_ACCESS_KEY || 'your_unsplash_access_key_here';
+  const unsplashKey = process.env.NEXT_PUBLIC_UNSPLASH_ACCESS_KEY;
+  if (!unsplashKey) {
+    // Fallback to Picsum if Unsplash key is not provided
+    return generateImageUrl(keywords, width, height);
+  }
   
   const encodedKeywords = encodeURIComponent(keywords);
   // Use Unsplash API random photo endpoint with proper format

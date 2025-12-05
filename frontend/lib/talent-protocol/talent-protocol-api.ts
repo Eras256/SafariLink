@@ -11,7 +11,10 @@ if (!process.env.TALENT_PROTOCOL_API_KEY) {
   console.warn('[Talent Protocol] TALENT_PROTOCOL_API_KEY is not set');
 }
 
-const API_KEY = process.env.TALENT_PROTOCOL_API_KEY || 'your_talent_protocol_api_key_here';
+const API_KEY = process.env.TALENT_PROTOCOL_API_KEY;
+if (!API_KEY) {
+  throw new Error('TALENT_PROTOCOL_API_KEY is required');
+}
 const BASE_URL = 'https://api.talentprotocol.com';
 
 export interface TalentProtocolProfile {
